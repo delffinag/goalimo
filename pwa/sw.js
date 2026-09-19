@@ -16,12 +16,14 @@ self.addEventListener("activate", e => {
 });
 
 // Erst der Cache, dann das Netz. Seitenaufrufe (auch mit ?parametern) bekommen immer index.html.
+// ignoreVary: Manche Server schicken „Vary: Origin“. Die Seite lädt Skript und CSS mit crossorigin, der Cache wurde
+// ohne gefüllt. Ohne ignoreVary gäbe es dann offline keinen Treffer, obwohl die Datei im Cache liegt.
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
-    const hit = await (req.mode === "navigate" ? cache.match("./index.html") : cache.match(req));
+    const hit = await cache.match(req.mode === "navigate" ? "./index.html" : req, { ignoreVary: true });
     return hit || fetch(req);
   })());
 });
