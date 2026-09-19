@@ -15,6 +15,69 @@
   <button id="skip" hidden>Tutorial überspringen</button>
   <button id="superBtn" aria-label="Super auslösen" hidden><span>Super</span></button>
   <div id="banner"></div>
+
+  <div id="welcome" class="overlay" hidden>
+    <div class="panel">
+      <h1 class="display">Willkommen!</h1>
+      <p class="sub">Wie heißt du? Dein Name steht im Spiel über deiner Figur und bleibt für immer.</p>
+      <input id="welcomeName" minlength="2" maxlength="12" autocomplete="off" enterkeyhint="done" spellcheck="false" placeholder="Dein Name" aria-label="Dein Name">
+      <div><button class="big" id="welcomeGo" disabled>Los geht's</button></div>
+    </div>
+  </div>
+
+  <div id="lobby" class="overlay lobby" hidden>
+    <div class="gemPill namePill"><b id="pName"></b></div>
+    <div class="gemPill curPill"><span class="coin" aria-hidden="true"></span><b id="coinCount" aria-label="Münzen">0</b><span class="pp" aria-hidden="true">⚡</span><b id="ppCount" aria-label="Powerpunkte">0</b><span class="gem" aria-hidden="true"></span><b id="gemCount" aria-label="Juwelen">0</b></div>
+    <button class="figBtn" id="lobbySetup"><span>Figuren</span></button>
+    <div class="lcenter">
+      <h1 class="display">Fußballspiel</h1>
+      <div class="linfo" id="lobbyInfo"></div>
+      <p class="sub">Fußball 3 gegen 3: Bring den Ball ins gegnerische Tor. Wer zuerst 2 Tore schießt, gewinnt.</p>
+      <button class="big" id="lobbyPlay">Spielen</button>
+      <button class="ghost" id="lobbyBox" hidden>Box öffnen</button>
+    </div>
+  </div>
+
+  <div id="menu" class="overlay figs" hidden>
+    <div class="panel figPanel">
+      <div class="figHead"><h2 class="display">Wähle deine Figur <span id="figCount"></span></h2><button class="ghost" id="menuBack">Zurück zur Lobby</button></div>
+      <div class="tiles" id="cards"></div>
+    </div>
+    <div class="figModal" id="figModal" hidden>
+      <div class="figDetail" role="dialog" aria-labelledby="detName">
+        <canvas id="detCv" aria-hidden="true"></canvas>
+        <div class="n" id="detName"></div>
+        <div class="t" id="detRole"></div>
+        <div class="ab" id="detAtk"></div>
+        <div class="ab" id="detSup"></div>
+        <div id="detStats"></div>
+        <div class="upg"><span id="detLvl"></span><button class="ghost" id="detUp"></button></div>
+        <div class="row"><button class="big" id="play">Spielen</button><button class="ghost" id="detPick">Auswählen</button><button class="ghost" id="detClose">Zurück</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="boxView" class="overlay" hidden>
+    <div class="panel boxPanel">
+      <h1 class="display">Deine Box</h1>
+      <button class="boxBtn" id="boxBtn" aria-label="Objekt aus der Box ziehen"><span class="box"></span></button>
+      <p class="sub" id="boxHint"></p>
+      <div class="loot" id="loot" aria-live="polite"></div>
+      <button class="big" id="boxDone" hidden>Fertig</button>
+    </div>
+  </div>
+
+  <div id="end" class="overlay" hidden>
+    <div class="panel">
+      <h1 class="display" id="endTitle">Sieg!</h1>
+      <div id="endScore"></div>
+      <p class="endGems" id="endGems"></p>
+      <div class="endReward" id="endReward" hidden></div>
+      <div><button class="big" id="endBox" hidden>Box öffnen</button></div>
+      <button class="big" id="again">Nochmal</button>
+      <button class="ghost" id="toMenu">Zur Lobby</button>
+    </div>
+  </div>
 </div>
 <script type="module" src="/src/main.ts"></script>
 </body>
