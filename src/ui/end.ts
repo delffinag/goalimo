@@ -1,19 +1,20 @@
-import { MEDALS, type MedalKind } from "../data/balance";
-import { medalEntries, resultLine, sessionTally } from "../meta/session";
+import { MEDAL_NAME } from "../data/balance";
+import { resultLine, sessionTally } from "../meta/session";
 import type { MatchResult } from "../sim/world";
 import type { App } from "./app";
 import { $ } from "./dom";
 
 const TITLE: Record<MatchResult, string> = { win: "Sieg!", draw: "Unentschieden", loss: "Niederlage" };
 
-export function medalChip(kind: MedalKind, n: number): HTMLElement {
+/** „🥇 2“ als Chip. Es gibt nur eine Art Medaille, eine pro Sieg. */
+export function medalChip(n: number): HTMLElement {
   const chip = document.createElement("span");
-  chip.className = "chip"; chip.dataset.m = kind;
+  chip.className = "chip"; chip.dataset.m = "medaille";
   const icon = document.createElement("span");
-  icon.className = `medaille ${kind}`; icon.setAttribute("aria-hidden", "true");
+  icon.className = "medaille"; icon.setAttribute("aria-hidden", "true");
   const b = document.createElement("b"); b.textContent = String(n);
   chip.append(icon, b);
-  chip.setAttribute("aria-label", `${n} × ${MEDALS[kind].name}`);
+  chip.setAttribute("aria-label", `${n} ${n === 1 ? MEDAL_NAME : MEDAL_NAME + "n"}`);
   return chip;
 }
 
@@ -41,7 +42,7 @@ export function initEnd(app: App): (result: MatchResult) => void {
     line.textContent = `${t.matches === 1 ? "1 Match" : `${t.matches} Matches`}: ${resultLine(t)}`;
     const chips = document.createElement("div");
     chips.className = "chips";
-    for (const [kind, n] of medalEntries(t.medals)) chips.append(medalChip(kind, n));
+    if (t.medals) chips.append(medalChip(t.medals));
     if (t.praemien) {
       const prize = document.createElement("span");
       prize.className = "chip"; prize.dataset.m = "praemie";

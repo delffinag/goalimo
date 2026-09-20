@@ -43,8 +43,10 @@
   </div>
 
   <div id="lobby" class="overlay lobby" hidden>
-    <div class="topPill namePill"><b id="pName"></b></div>
-    <div class="topPill medalPill" id="medalPill" aria-label="Gewonnene Medaillen"></div>
+    <div class="corner">
+      <div class="namePlate"><b id="pName"></b></div>
+      <button class="medalBtn" id="medalBtn"><span class="medaille" aria-hidden="true"></span><b id="medalCount">0</b></button>
+    </div>
     <div class="topPill curPill">
       <span class="taler" aria-hidden="true"></span><b id="talerCount" aria-label="Taler">0</b>
       <span class="training" aria-hidden="true">T</span><b id="trainingCount" aria-label="Trainingspunkte">0</b>
@@ -53,14 +55,19 @@
     <button class="figBtn" id="lobbySetup"><span>Figuren</span></button>
     <div class="lcenter">
       <h1 class="display">Goalimo</h1>
-      <div class="linfo" id="lobbyInfo"></div>
       <button class="ghost" id="lobbyPraemie" hidden>Prämie wählen</button>
     </div>
     <div class="modePick" id="modePick" role="group" aria-label="Spielmodus wählen">
       <span class="mlabel">Spielmodus</span>
       <div class="mbtns" id="modeBtns"></div>
     </div>
-    <button class="big playBtn" id="lobbyPlay">Spielen</button>
+    <div class="playBox">
+      <div class="figCard" id="lobbyFigure">
+        <canvas class="fcv" id="lobbyCv" aria-hidden="true"></canvas>
+        <span class="ftext"><b id="lobbyName"></b><small id="lobbyClass"></small></span>
+      </div>
+      <button class="big playBtn" id="lobbyPlay">Spielen</button>
+    </div>
   </div>
 
   <div id="menu" class="overlay figs" hidden>
@@ -79,6 +86,17 @@
         <div class="upg"><span id="detStufe"></span><button class="ghost" id="detTrain"></button></div>
         <div class="row"><button class="big" id="play">Spielen</button><button class="ghost" id="detPick">Auswählen</button><button class="ghost" id="detClose">Zurück</button></div>
       </div>
+    </div>
+  </div>
+
+  <div id="pathView" class="overlay" hidden>
+    <div class="panel pathPanel">
+      <div class="pathHead">
+        <h1 class="display">Belohnungsweg</h1>
+        <button class="ghost" id="pathBack">Zurück</button>
+      </div>
+      <p class="sub" id="pathHint"></p>
+      <div class="path" id="pathList"></div>
     </div>
   </div>
 

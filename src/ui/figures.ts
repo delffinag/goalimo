@@ -4,6 +4,7 @@ import { canTrainieren, epOf, stufeOf, trainieren, trainingCost } from "../meta/
 import { drawPortrait } from "../render/portrait";
 import type { App } from "./app";
 import { $ } from "./dom";
+import { dragScroll } from "./scroll";
 
 function statBar(label: string, v: number): HTMLElement {
   const row = document.createElement("div"); row.className = "stat";
@@ -34,7 +35,7 @@ function stars(el: HTMLElement, stufe: number): void {
 export function initFigures(app: App): () => void {
   const cards = $("cards"), modal = $("figModal");
   const p = app.progress;
-  let detailKey = p.chosen, dragged = false;
+  let detailKey = p.chosen;
 
   // Karte: helle Fläche, oben ein Farbband, rundes Medaillon mit Porträt, Name, Stärke als Pille, unten Sterne und EP
   for (const k of FIGURE_KEYS) {
@@ -47,7 +48,7 @@ export function initFigures(app: App): () => void {
       '<span class="tfoot"><span class="tstars"></span><span class="tep"></span></span>';
     tile.querySelector(".tname")!.textContent = T.name;
     tile.querySelector(".tstr")!.textContent = T.strength;
-    tile.addEventListener("click", () => { if (!dragged) openDetail(k); });
+    tile.addEventListener("click", () => { if (!scroll.dragged()) openDetail(k); });
     cards.append(tile);
   }
   $("figCount").textContent = `(${FIGURE_KEYS.length})`;
@@ -97,22 +98,7 @@ export function initFigures(app: App): () => void {
   $("play").addEventListener("click", () => { pick(); modal.hidden = true; app.play(); });
   $("menuBack").addEventListener("click", () => app.show("lobby"));
 
-  // Eigenes Wischen zum Scrollen, damit es auch in der gedrehten Ansicht richtig herum funktioniert
-  let drag: { id: number; y: number; top: number } | null = null;
-  const stage = app.game.stage;
-  cards.addEventListener("pointerdown", e => {
-    dragged = false;
-    if (e.pointerType !== "mouse") drag = { id: e.pointerId, y: stage.toLocal(e).y, top: cards.scrollTop };
-  });
-  cards.addEventListener("pointermove", e => {
-    if (!drag || e.pointerId !== drag.id) return;
-    const dy = stage.toLocal(e).y - drag.y;
-    if (Math.abs(dy) > 8) dragged = true;
-    if (dragged) cards.scrollTop = drag.top - dy;
-  });
-  const endDrag = (e: PointerEvent) => { if (drag && e.pointerId === drag.id) drag = null; };
-  cards.addEventListener("pointerup", endDrag);
-  cards.addEventListener("pointercancel", endDrag);
+  const scroll = dragScroll(cards, app.game.stage);
 
   return function enter() {
     modal.hidden = true;

@@ -43,15 +43,19 @@ den Code aber sauber in Module aufteilen.
 - Aktuell 3 Figuren: Rumpel (rot, hält am meisten aus), Zisch (gelb, am schnellsten), Falka (blau, größte Reichweite).
   Weitere 47 Figuren liegen im Prototyp in `ROSTER_ALL` bereit.
 - Beim ersten Start einmalig Spielernamen abfragen (2–12 Zeichen), danach nicht mehr änderbar.
-- Lobby: Name oben links, Taler/Trainingspunkte/Kristalle oben rechts, Knopf „Figuren“ links,
-  Spielmodus unten links, „Spielen“ unten rechts.
+- Lobby: Name als Quadrat oben links mit der Medaille darunter, Taler/Trainingspunkte/Kristalle oben rechts,
+  Knopf „Figuren“ links, Spielmodus unten links, gewählte Figur über dem Knopf „Spielen“ unten rechts,
+  Spielname in der Mitte.
 - Sitzung: Nach jedem Match wählt der Spieler „Nochmal spielen“ oder „Spiel verlassen“. Der Bildschirm nach dem Match
   zeigt nur Ergebnis, Spielstand und den Stand der Sitzung – gutgeschrieben wird nichts. Erst beim Verlassen wird alles
   auf einmal verbucht (je Sieg eine Siegprämie, dazu Medaillen, Erfahrung und Kristallverlust) und in einer
   Abschluss-Übersicht gezeigt. Eine Sitzung, die nie verlassen wurde (Tab geschlossen), wird beim nächsten Start
   abgerechnet; sie liegt dafür unter `gl-sitzung` im Speicher.
-- Medaille: Jeder Sieg gibt eine bleibende Medaille, sie kann nie verloren gehen. Gold für einen Sieg ohne
-  Gegentreffer, Silber ab zwei Punkten Vorsprung, sonst Bronze. Medaillenspiegel in der Lobby unter dem Namen.
+- Medaille: Es gibt genau eine Art Medaille, eine pro Sieg. Sie kann nie verloren gehen und steht in der Lobby
+  unter dem Namen; ein Tipp darauf öffnet den Belohnungsweg.
+- Belohnungsweg (`REWARD_PATH` in `data/balance.ts`): feste Stationen bei steigenden Medaillenzahlen, jede mit einer
+  offen sichtbaren Belohnung (Taler, Trainingspunkte oder Kristalle). Erreichte Stationen werden beim Verbuchen einer
+  Sitzung automatisch gutgeschrieben. Der Weg ist endlich; danach ist er abgeschlossen.
 - Belohnung: Ein Sieg gibt eine Siegprämie, gewählt wird sie beim Verlassen. Der Spieler wählt 1 von 3 sichtbaren Angeboten
   (40–60 Taler, 15–25 Trainingspunkte oder 2–4 Kristalle). Keine Zufallsziehung, keine Boxen.
   Niederlage: −3 Kristalle (nie unter 0). Erfahrung (EP) pro Figur, steigt nur: Sieg +10, Unentschieden +5, Niederlage +2.

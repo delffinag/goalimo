@@ -1,29 +1,22 @@
-import { MEDAL_KINDS, MEDALS } from "../data/balance";
+import { MEDAL_NAME } from "../data/balance";
 import { FIGURES } from "../data/figures";
 import { MODE_KEYS, MODES } from "../data/modes";
+import { drawPortrait } from "../render/portrait";
 import type { App } from "./app";
 import { $ } from "./dom";
 import { updatePraemieButtons } from "./praemie";
 
 /**
- * Lobby: Name oben links, Taler/Trainingspunkte/Kristalle oben rechts, „Figuren“ links,
- * Spielmodus unten links, „Spielen“ unten rechts.
+ * Lobby: Name als Schild oben links mit der Medaille darunter, Währungen oben rechts,
+ * „Figuren“ links, Spielmodus unten links, gewählte Figur über dem Knopf „Spielen“ unten rechts.
  */
 export function initLobby(app: App): () => void {
-  const btns = $("modeBtns"), medals = $("medalPill");
-
-  // Medaillenspiegel: je eine Zahl pro Medaillenart, direkt unter dem Namen
-  for (const kind of MEDAL_KINDS) {
-    const icon = document.createElement("span");
-    icon.className = `medaille ${kind}`; icon.setAttribute("aria-hidden", "true");
-    const n = document.createElement("b");
-    n.dataset.m = kind; n.setAttribute("aria-label", MEDALS[kind].name);
-    medals.append(icon, n);
-  }
+  const btns = $("modeBtns");
 
   $("lobbyPlay").addEventListener("click", () => app.play());
   $("lobbySetup").addEventListener("click", () => app.show("figures"));
   $("lobbyPraemie").addEventListener("click", () => app.openPraemie("lobby"));
+  $("medalBtn").addEventListener("click", () => app.show("path"));
 
   for (const key of MODE_KEYS) {
     const m = MODES[key];
@@ -43,15 +36,24 @@ export function initLobby(app: App): () => void {
 
   function render(): void {
     const p = app.progress, T = FIGURES[p.chosen];
-    $("pName").textContent = p.playerName;
+    // Das Namensschild ist quadratisch: längere Namen brauchen eine kleinere Schrift
+    const plate = $("pName");
+    plate.textContent = p.playerName;
+    plate.dataset.len = p.playerName.length > 9 ? "lang" : p.playerName.length > 6 ? "mittel" : "kurz";
     $("talerCount").textContent = String(p.taler);
     $("trainingCount").textContent = String(p.training);
     $("kristallCount").textContent = String(p.kristalle);
-    $("lobbyInfo").textContent = `${T.name}, ${T.className}`;
+    $("medalCount").textContent = String(p.medaillen);
+    $("medalBtn").setAttribute("aria-label",
+      `${p.medaillen} ${p.medaillen === 1 ? MEDAL_NAME : MEDAL_NAME + "n"}, Belohnungsweg öffnen`);
+    $("lobbyName").textContent = T.name;
+    $("lobbyClass").textContent = T.className;
+    $("lobbyFigure").style.setProperty("--c", T.look[1]);
     for (const b of btns.children as HTMLCollectionOf<HTMLElement>)
       b.setAttribute("aria-pressed", String(b.dataset.m === p.modus));
-    for (const kind of MEDAL_KINDS) medals.querySelector(`b[data-m="${kind}"]`)!.textContent = String(p.medaillen[kind]);
     updatePraemieButtons(p);
+    // Das Porträt erst zeichnen, wenn die Lobby sichtbar ist und der Canvas eine Größe hat
+    requestAnimationFrame(() => drawPortrait($<HTMLCanvasElement>("lobbyCv"), p.chosen));
   }
 
   return render;

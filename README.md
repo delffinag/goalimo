@@ -45,8 +45,10 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 - Ein **gelungener Pass** lädt den Super des Passgebers um 25 %.
 - Nach jedem Match wählt man **„Nochmal spielen“ oder „Spiel verlassen“**. Eine Reihe von Matches ist eine *Sitzung*:
   Verbucht wird erst beim Verlassen, dann aber alles auf einmal – mit einer Abschluss-Übersicht.
-- Jeder Sieg gibt eine bleibende **Medaille**: Gold ohne Gegentreffer, Silber ab zwei Punkten Vorsprung,
-  sonst Bronze. Medaillen gehen nie verloren; der Medaillenspiegel steht in der Lobby unter dem Namen.
+- Jeder Sieg gibt eine bleibende **Medaille**. Medaillen gehen nie verloren und stehen in der Lobby unter dem Namen.
+- Medaillen führen den **Belohnungsweg** entlang: feste Stationen mit offen sichtbaren Belohnungen (Taler,
+  Trainingspunkte, Kristalle), die beim Erreichen automatisch gutgeschrieben werden. Der Weg öffnet sich mit
+  einem Tipp auf die Medaille.
 - Ein Sieg gibt zusätzlich eine **Siegprämie**: drei offene Angebote (40–60 Taler, 15–25 Trainingspunkte, 2–4 Kristalle),
   der Spieler wählt genau eines. Bei mehreren Siegen in einer Sitzung werden die Prämien nacheinander gewählt.
   Keine Zufallsziehung, kein Kauf mit echtem Geld.
@@ -63,8 +65,8 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 | `src/ai` | Bots: Wegfindung, Pässe, bewusst ungenaues Zielen. |
 | `src/input` | Joysticks, Super-Stick, Tastatur, Maus. Liefert pro Tick eine `PlayerInput`. |
 | `src/render` | Canvas-Darstellung von Spielfeld, Figuren, Zielhilfe und Porträts. Liest die Welt nur. |
-| `src/meta` | Name, Taler, Trainingspunkte, Kristalle, Siegprämien, Medaillen, Trainingsstufen, Erfahrung, laufende Sitzung, Speicherung (localStorage, austauschbar). |
-| `src/ui` | DOM-Screens: Willkommen, Lobby, Figuren, Siegprämie, Spielende, Abschluss der Sitzung, Anzeigen im Match, Bühne. |
+| `src/meta` | Name, Taler, Trainingspunkte, Kristalle, Siegprämien, Medaillen, Belohnungsweg, Trainingsstufen, Erfahrung, laufende Sitzung, Speicherung (localStorage, austauschbar). |
+| `src/ui` | DOM-Screens: Willkommen, Lobby, Figuren, Belohnungsweg, Siegprämie, Spielende, Abschluss der Sitzung, Anzeigen im Match, Bühne. |
 | `src/game.ts` | Verbindet Eingabe → Simulation → Darstellung. |
 
 Die Simulation ist strikt vom Rendering getrennt: Sie bekommt pro Tick nur die Eingabe des Spielers und meldet Ereignisse

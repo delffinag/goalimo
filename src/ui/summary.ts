@@ -1,8 +1,11 @@
+import type { PraemieKind } from "../data/balance";
 import { FIGURES } from "../data/figures";
-import { medalEntries, resultLine, type SessionSummary } from "../meta/session";
+import { resultLine, type SessionSummary } from "../meta/session";
 import type { App } from "./app";
 import { $ } from "./dom";
 import { medalChip } from "./end";
+
+const PATH_LABEL: Record<PraemieKind, string> = { taler: "Taler", training: "Trainingspunkte", kristalle: "Kristalle" };
 
 /**
  * Abschluss einer Sitzung: hier wird gezeigt, was gerade gutgeschrieben wurde.
@@ -26,14 +29,15 @@ export function initSummary(app: App): { show(sum: SessionSummary): void; refres
     $("sumMatches").textContent = sum.matches ? `${matches}: ${resultLine(sum)}` : "Kein Match gespielt.";
 
     const medals = $("sumMedals");
-    const chips = medalEntries(sum.medals).map(([kind, n]) => medalChip(kind, n));
-    medals.replaceChildren(...chips);
-    medals.hidden = !chips.length;
+    medals.replaceChildren(...(sum.medals ? [medalChip(sum.medals)] : []));
+    medals.hidden = !sum.medals;
 
     // Erfahrung je Figur und Kristallverlust
     const lines: string[] = sum.ep.map(e => `${FIGURES[e.figure].name}: +${e.plus} EP (jetzt ${e.total})`);
     if (sum.kristalleLost > 0) lines.push(`−${sum.kristalleLost} Kristalle`);
-    if (!chips.length && sum.matches) lines.push("Keine Medaille – die gibt es nur für einen Sieg.");
+    if (!sum.medals && sum.matches) lines.push("Keine Medaille – die gibt es nur für einen Sieg.");
+    // Stationen des Belohnungswegs, die diese Sitzung erreicht hat
+    for (const st of sum.path) lines.push(`Belohnungsweg bei ${st.medals}: +${st.n} ${PATH_LABEL[st.k]}`);
     const list = $("sumEp");
     list.replaceChildren(...lines.map(text => {
       const div = document.createElement("div");

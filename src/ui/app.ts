@@ -9,11 +9,12 @@ import { $ } from "./dom";
 import { initEnd } from "./end";
 import { initFigures } from "./figures";
 import { initLobby } from "./lobby";
+import { initPath } from "./path";
 import { initPraemie } from "./praemie";
 import { initSummary } from "./summary";
 import { initWelcome } from "./welcome";
 
-export type Screen = "welcome" | "lobby" | "figures" | "praemie" | "end" | "summary" | "match";
+export type Screen = "welcome" | "lobby" | "figures" | "path" | "praemie" | "end" | "summary" | "match";
 
 /** Was jeder Screen braucht: Spiel, Fortschritt, laufende Sitzung, Speichern und Navigation */
 export interface App {
@@ -30,7 +31,8 @@ export interface App {
 }
 
 const OVERLAYS: Record<Exclude<Screen, "match">, string> = {
-  welcome: "welcome", lobby: "lobby", figures: "menu", praemie: "praemieView", end: "end", summary: "summary"
+  welcome: "welcome", lobby: "lobby", figures: "menu", path: "pathView", praemie: "praemieView",
+  end: "end", summary: "summary"
 };
 
 function goFullscreen(): void {
@@ -77,6 +79,7 @@ export function initApp(game: Game): App {
   initWelcome(app);
   enter.lobby = initLobby(app);
   enter.figures = initFigures(app);
+  enter.path = initPath(app);
   app.openPraemie = initPraemie(app);
   const showEnd = initEnd(app);
   const summary = initSummary(app);

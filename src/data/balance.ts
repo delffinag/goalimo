@@ -67,18 +67,31 @@ export const LOSS_KRISTALLE = -3;
 export const ERFAHRUNG = { win: 10, draw: 5, loss: 2 } as const;
 
 /**
- * Medaillen: bleibende Auszeichnung für jeden Sieg. Sie werden nur erspielt, nie gekauft,
- * und sie können nie wieder verloren gehen. Welche Medaille es gibt, hängt am Ergebnis.
+ * Medaille: eine bleibende Auszeichnung, eine pro Sieg. Sie wird nur erspielt, nie gekauft,
+ * und kann nie wieder verloren gehen. Medaillen bringen den Spieler den Belohnungsweg entlang.
  */
-export type MedalKind = "gold" | "silber" | "bronze";
-export const MEDALS: Record<MedalKind, { name: string; why: string }> = {
-  gold: { name: "Goldmedaille", why: "Sieg ohne Gegentreffer" },
-  silber: { name: "Silbermedaille", why: "Sieg mit mindestens zwei Punkten Vorsprung" },
-  bronze: { name: "Bronzemedaille", why: "Knapper Sieg" }
-};
-export const MEDAL_KINDS: MedalKind[] = ["gold", "silber", "bronze"];
-/** Ab diesem Vorsprung gibt es Silber statt Bronze */
-export const SILBER_VORSPRUNG = 2;
+export const MEDAL_NAME = "Medaille";
+
+/**
+ * Belohnungsweg: feste Stationen, die bei einer bestimmten Zahl Medaillen erreicht sind.
+ * Die Belohnungen sind offen sichtbar und werden automatisch gutgeschrieben – keine Zufallsziehung,
+ * kein Kauf mit echtem Geld. Der Weg ist endlich; ist die letzte Station erreicht, ist er abgeschlossen.
+ */
+export interface PathStation { medals: number; k: PraemieKind; n: number }
+export const REWARD_PATH: PathStation[] = [
+  { medals: 1, k: "taler", n: 50 },
+  { medals: 2, k: "training", n: 20 },
+  { medals: 4, k: "kristalle", n: 3 },
+  { medals: 6, k: "taler", n: 100 },
+  { medals: 9, k: "training", n: 40 },
+  { medals: 12, k: "kristalle", n: 5 },
+  { medals: 16, k: "taler", n: 180 },
+  { medals: 20, k: "training", n: 70 },
+  { medals: 25, k: "kristalle", n: 8 },
+  { medals: 30, k: "taler", n: 300 },
+  { medals: 36, k: "training", n: 100 },
+  { medals: 45, k: "kristalle", n: 12 }
+];
 
 export interface CosmeticReward { id: "krone" | "gold" | "spur"; cost: number; icon: string; name: string; desc: string }
 export const REWARDS: CosmeticReward[] = [

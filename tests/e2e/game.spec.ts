@@ -34,15 +34,23 @@ test("Namenseingabe: einmalig beim ersten Start, danach fest", async ({ page }) 
 test("Lobby: Name oben links, Währungen oben rechts, Figuren links, Spielmodus unten links, Spielen unten rechts", async ({ page }) => {
   await start(page, { ...PLAYER, "gl-taler": "12", "gl-training": "7", "gl-kristalle": "3" });
   await expectLobby(page);
-  const name = await stagePos(page, page.locator(".namePill")), money = await stagePos(page, page.locator(".curPill"));
+  const name = await stagePos(page, page.locator(".namePlate")), money = await stagePos(page, page.locator(".curPill"));
   const figures = await stagePos(page, page.locator("#lobbySetup")), play = await stagePos(page, page.locator("#lobbyPlay"));
   const mode = await stagePos(page, page.locator("#modePick"));
+  const figure = await stagePos(page, page.locator("#lobbyFigure")), medal = await stagePos(page, page.locator("#medalBtn"));
   expect(name.x).toBeLessThan(0.3); expect(name.y).toBeLessThan(0.3);
   expect(money.x).toBeGreaterThan(0.7); expect(money.y).toBeLessThan(0.3);
   expect(figures.x).toBeLessThan(0.25); expect(Math.abs(figures.y - 0.5)).toBeLessThan(0.1);
   // „Spielen“ unten rechts, Spielmodus unten links
   expect(play.x).toBeGreaterThan(0.7); expect(play.y).toBeGreaterThan(0.7);
   expect(mode.x).toBeLessThan(0.3); expect(mode.y).toBeGreaterThan(0.7);
+  // Die gewählte Figur steht direkt über dem Spielen-Knopf
+  expect(figure.x).toBeGreaterThan(0.7);
+  expect(figure.y).toBeLessThan(play.y);
+  expect(play.y - figure.y).toBeLessThan(0.35);
+  // Der Name sitzt als Quadrat in der Ecke, die Medaille darunter
+  expect(medal.x).toBeLessThan(0.3);
+  expect(medal.y).toBeGreaterThan(name.y);
   await expect(page.locator("#talerCount")).toHaveText("12");
   await expect(page.locator("#trainingCount")).toHaveText("7");
   await expect(page.locator("#kristallCount")).toHaveText("3");
@@ -57,12 +65,12 @@ test("Alter Spielstand wird übernommen", async ({ page }) => {
   await expect(page.locator("#talerCount")).toHaveText("77");
   await expect(page.locator("#trainingCount")).toHaveText("8");
   await expect(page.locator("#kristallCount")).toHaveText("4");
-  await expect(page.locator("#lobbyInfo")).toHaveText("Zisch, Flitzer");
+  await expect(page.locator("#lobbyFigure")).toContainText("Zisch");
 });
 
 test("Figurenkarte: Farbband, Medaillon, Name, Stärke, Sterne und EP, Häkchen bei der Auswahl", async ({ page }) => {
   await start(page, { ...PLAYER, "gl-erfahrung": '{"brecher":25}' });
-  await expect(page.locator("#lobbyInfo")).toHaveText("Rumpel, Nahkämpfer");
+  await expect(page.locator("#lobbyFigure")).toContainText("Rumpel");
   await page.locator("#lobbySetup").click();
   await expect(page.locator(".tile")).toHaveCount(3);
 
@@ -92,9 +100,9 @@ test("Figurenkarte: Farbband, Medaillon, Name, Stärke, Sterne und EP, Häkchen 
   await page.locator("#detPick").click();
   await expect(page.locator('.tile[data-k="flitzer"] .tcheck')).toBeVisible();
   await page.locator("#menuBack").click();
-  await expect(page.locator("#lobbyInfo")).toHaveText("Zisch, Flitzer");
+  await expect(page.locator("#lobbyFigure")).toContainText("Zisch");
   await page.reload();
-  await expect(page.locator("#lobbyInfo")).toHaveText("Zisch, Flitzer");
+  await expect(page.locator("#lobbyFigure")).toContainText("Zisch");
 });
 
 test("Match starten: erst Übungsrunde, dann Anstoß mit 3:00 auf der Uhr", async ({ page }) => {
@@ -141,12 +149,11 @@ test("Tor fällt und wird gemeldet, Sieg bei 3 Toren", async ({ page }) => {
   // Nach dem Match nur der Stand der Sitzung und die Wahl – gutgeschrieben ist noch nichts
   await expect(page.locator("#endTally")).toContainText("1 Match: 1 Sieg");
   await expect(page.locator("#endTally")).toContainText("1 Siegprämie");
-  await expect(page.locator("#endTally .chip .medaille.gold")).toBeVisible();
+  await expect(page.locator("#endTally .chip[data-m=\"medaille\"] b")).toHaveText("1");
   await expect(page.locator("#endTally small")).toContainText("wenn du das Spiel verlässt");
   await expect(page.locator("#endAgain")).toBeVisible();
   await expect(page.locator("#endLeave")).toBeVisible();
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("gl-medaillen") || "{}")))
-    .toEqual({ gold: 0, silber: 0, bronze: 0 });
+  expect(await page.evaluate(() => localStorage.getItem("gl-medaillen"))).toBe("0");
 });
 
 test("Sitzung: mehrere Matches am Stück, alles wird erst beim Verlassen gutgeschrieben", async ({ page }) => {
@@ -166,16 +173,14 @@ test("Sitzung: mehrere Matches am Stück, alles wird erst beim Verlassen gutgesc
   await expect(page.locator("#end")).toBeVisible({ timeout: 10_000 });
   await expect(page.locator("#endTally")).toContainText("2 Matches: 2 Siege");
   await expect(page.locator("#endTally")).toContainText("2 Siegprämien");
-  await expect(page.locator("#endTally .chip .medaille.gold")).toBeVisible();
-  await expect(page.locator("#endTally .chip .medaille.bronze")).toBeVisible();
+  await expect(page.locator("#endTally .chip[data-m=\"medaille\"] b")).toHaveText("2");
 
   // Erst beim Verlassen wird alles auf einmal verbucht: eine Prämie pro Sieg
   await page.locator("#endLeave").click();
   const summary = page.locator("#summary");
   await expect(summary).toBeVisible();
   await expect(page.locator("#sumMatches")).toHaveText("2 Matches: 2 Siege");
-  await expect(page.locator("#sumMedals .medaille.gold")).toBeVisible();
-  await expect(page.locator("#sumMedals .medaille.bronze")).toBeVisible();
+  await expect(page.locator("#sumMedals .chip b")).toHaveText("2");
   await expect(page.locator("#sumEp")).toContainText("Rumpel: +20 EP (jetzt 20)");
   await expect(page.locator("#sumPraemie")).toHaveText("2 Prämien wählen");
 
@@ -195,9 +200,10 @@ test("Sitzung: mehrere Matches am Stück, alles wird erst beim Verlassen gutgesc
   await expect(page.locator("#sumPraemie")).toBeHidden();
   await page.locator("#sumDone").click();
   await expectLobby(page);
-  await expect(page.locator("#talerCount")).toHaveText(String(ersteTaler + zweiteTaler));
-  await expect(page.locator('#medalPill b[data-m="gold"]')).toHaveText("1");
-  await expect(page.locator('#medalPill b[data-m="bronze"]')).toHaveText("1");
+  // Prämien plus die erste Station des Belohnungswegs (50 Taler bei 1 Medaille)
+  await expect(page.locator("#talerCount")).toHaveText(String(ersteTaler + zweiteTaler + 50));
+  await expect(page.locator("#trainingCount")).toHaveText("20");
+  await expect(page.locator("#medalCount")).toHaveText("2");
   await expect(page.locator("#lobbyPraemie")).toBeHidden();
 });
 
@@ -211,19 +217,17 @@ test("Medaille: knapper Sieg gibt Bronze, Unentschieden gibt keine", async ({ pa
 
   await expect(page.locator("#end")).toBeVisible({ timeout: 10_000 });
   await expect(page.locator("#endScore")).toContainText("3 : 2");
-  await expect(page.locator("#endTally .chip .medaille.bronze")).toBeVisible();
+  await expect(page.locator("#endTally .chip[data-m=\"medaille\"] b")).toHaveText("1");
 
   await page.locator("#endLeave").click();
-  await expect(page.locator("#sumMedals .medaille.bronze")).toBeVisible();
-  await expect(page.locator("#sumMedals .medaille.gold")).toHaveCount(0);
+  await expect(page.locator("#sumMedals .chip b")).toHaveText("1");
   await page.locator("#sumDone").click();
   await expectLobby(page);
-  await expect(page.locator('#medalPill b[data-m="bronze"]')).toHaveText("1");
-  await expect(page.locator('#medalPill b[data-m="gold"]')).toHaveText("0");
+  await expect(page.locator("#medalCount")).toHaveText("1");
 
   // Medaillen bleiben nach dem Neuladen erhalten
   await page.reload();
-  await expect(page.locator('#medalPill b[data-m="bronze"]')).toHaveText("1");
+  await expect(page.locator("#medalCount")).toHaveText("1");
 });
 
 test("Siegprämie: drei offene Angebote, genau eines wird gebucht, danach ist der Knopf weg", async ({ page }) => {
@@ -258,11 +262,46 @@ test("Siegprämie: drei offene Angebote, genau eines wird gebucht, danach ist de
   await expect(praemie).toBeHidden();
   await page.locator("#sumDone").click();
   await expectLobby(page);
-  await expect(page.locator('#medalPill b[data-m="gold"]')).toHaveText("1");
-  await expect(page.locator("#talerCount")).toHaveText(String(taler));
+  await expect(page.locator("#medalCount")).toHaveText("1");
+  // Prämie plus die erste Station des Belohnungswegs
+  await expect(page.locator("#talerCount")).toHaveText(String(taler + 50));
   await expect(page.locator("#trainingCount")).toHaveText("0");
   await expect(page.locator("#kristallCount")).toHaveText("0");
   await expect(page.locator("#lobbyPraemie")).toBeHidden();
+});
+
+test("Belohnungsweg: über die Medaille erreichbar, Stationen werden abgeholt", async ({ page }) => {
+  await start(page, PLAYER);
+  await expectLobby(page);
+  await expect(page.locator("#medalCount")).toHaveText("0");
+
+  // Der Weg ist über die Medaille unter dem Namen erreichbar
+  await page.locator("#medalBtn").click();
+  await expect(page.locator("#pathView")).toBeVisible();
+  await expect(page.locator(".station")).toHaveCount(12);
+  await expect(page.locator("#pathHint")).toContainText("0 Medaillen");
+  await expect(page.locator("#pathHint")).toContainText("Noch 1 bis zur nächsten Station");
+  await expect(page.locator('.station[data-state="done"]')).toHaveCount(0);
+  await expect(page.locator('.station[data-state="next"]')).toHaveCount(1);
+  await expect(page.locator(".station").first()).toContainText("50");
+  await page.locator("#pathBack").click();
+  await expectLobby(page);
+
+  // Ein Sieg gibt eine Medaille, beim Verlassen wird die erste Station abgeholt
+  await page.locator("#lobbyPlay").click();
+  await winMatch(page);
+  await expect(page.locator("#end")).toBeVisible({ timeout: 10_000 });
+  await page.locator("#endLeave").click();
+  await expect(page.locator("#sumEp")).toContainText("Belohnungsweg bei 1: +50 Taler");
+  await page.locator("#sumDone").click();
+
+  await expectLobby(page);
+  await expect(page.locator("#medalCount")).toHaveText("1");
+  await expect(page.locator("#talerCount")).toHaveText("50");
+  await page.locator("#medalBtn").click();
+  await expect(page.locator('.station[data-state="done"]')).toHaveCount(1);
+  await expect(page.locator("#pathHint")).toContainText("1 Medaille.");
+  await expect(page.locator("#pathHint")).toContainText("Noch 1 bis zur nächsten Station");
 });
 
 test("Rugby: unten links wählbar, Punkt nur durch Tragen über die Linie", async ({ page }) => {

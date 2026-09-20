@@ -79,14 +79,12 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 
 /* Medaille: Band und Scheibe. Gold, Silber und Bronze unterscheiden sich zusätzlich in der Helligkeit,
    damit sie auch ohne Farbwahrnehmung auseinanderzuhalten sind. */
-.medaille{ position:relative; display:inline-block; flex:0 0 auto; width:21px; height:21px; border-radius:50%; margin:6px 2px 0 6px;
+.medaille{ --m1:#ffd23f; --m2:#a86b00;
+  position:relative; display:inline-block; flex:0 0 auto; width:21px; height:21px; border-radius:50%; margin:6px 2px 0 6px;
   vertical-align:middle; background:radial-gradient(circle at 34% 30%, #ffffff, var(--m1) 42%, var(--m2));
   box-shadow:inset 0 0 0 2px var(--m2); }
 .medaille::before{ content:""; position:absolute; left:50%; top:-6px; width:13px; height:8px; transform:translateX(-50%);
   border-radius:2px 2px 0 0; background:linear-gradient(90deg, #d9483f 0 50%, #2f6fd0 50% 100%); }
-.medaille.gold{ --m1:#ffd23f; --m2:#a86b00; }
-.medaille.silber{ --m1:#eceff4; --m2:#7d8794; }
-.medaille.bronze{ --m1:#e0a06a; --m2:#7c4a20; }
 .medaille.gross{ width:46px; height:46px; margin:12px 0 0; box-shadow:inset 0 0 0 4px var(--m2); }
 .medaille.gross::before{ top:-12px; width:26px; height:15px; }
 
@@ -103,9 +101,23 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
   display:flex; align-items:center; gap:8px; background:rgba(0,0,0,.6); color:#fff; border-radius:14px; padding:6px 16px 7px 12px;
   font-family:var(--display); font-weight:600; font-size:21px; box-shadow:0 4px 0 rgba(0,0,0,.3); }
 .topPill .kristall{ width:16px; height:18px; margin-left:6px; }
-.medalPill{ top:calc(env(safe-area-inset-top,0px) + 52px); font-size:18px; gap:3px; padding:9px 14px 6px 10px; }
-.medalPill .medaille{ width:20px; height:20px; margin:4px 0 0 9px; }
-.medalPill .medaille::before{ top:-4px; width:10px; height:6px; }
+/* Ecke oben: Name als Quadrat, darunter die Medaille als Knopf zum Belohnungsweg */
+.corner{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); left:calc(env(safe-area-inset-left,0px) + 12px);
+  display:flex; flex-direction:column; align-items:center; gap:6px; }
+.namePlate{ width:84px; height:84px; display:flex; align-items:center; justify-content:center; text-align:center;
+  background:rgba(0,0,0,.6); border:3px solid var(--accent); border-radius:14px; padding:6px;
+  box-shadow:0 4px 0 rgba(0,0,0,.3); }
+.namePlate b{ font-family:var(--display); font-weight:600; font-size:18px; line-height:1.1; color:#fff;
+  overflow-wrap:break-word; }
+.namePlate b[data-len="mittel"]{ font-size:14px; }
+.namePlate b[data-len="lang"]{ font-size:12px; }
+.namePlate:has(#pName:empty){ display:none; }
+.medalBtn{ display:flex; align-items:center; gap:4px; background:rgba(0,0,0,.6); border:0; border-radius:999px;
+  padding:5px 12px 5px 6px; cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.3); }
+.medalBtn b{ font-family:var(--display); font-weight:600; font-size:16px; color:#fff; }
+.medalBtn .medaille{ width:19px; height:19px; margin:4px 0 0; }
+.medalBtn .medaille::before{ top:-4px; width:10px; height:6px; }
+.medalBtn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.3); }
 .topPill .taler, .topPill .training{ width:19px; height:19px; }
 .curPill{ left:auto; right:calc(env(safe-area-inset-right,0px) + 12px); }
 .namePill:has(#pName:empty){ display:none; }
@@ -113,18 +125,26 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
   background:var(--panel); color:var(--ink); border:0; border-radius:18px; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:2px;
   font-family:var(--display); font-weight:600; font-size:20px; box-shadow:0 5px 0 rgba(0,0,0,.3); cursor:pointer; }
 .figBtn:active{ transform:translateY(calc(-50% + 3px)); box-shadow:0 2px 0 rgba(0,0,0,.3); }
-.lcenter{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:40%; min-width:240px; max-height:calc(100% - 20px);
-  display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; background:var(--panel); border-radius:22px; padding:12px 14px 16px;
-  box-shadow:0 8px 0 rgba(0,0,0,.25); }
-.lcenter h1{ margin:0; font-size:32px; line-height:1.05; }
-.lcenter .sub{ margin:0; font-size:13px; }
-.lcenter .ghost{ margin-left:0; }
-.linfo{ font-weight:800; color:var(--muted); font-size:14px; }
+/* Mitte: nur der Spielname, keine Karte mehr */
+.lcenter{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); display:flex; flex-direction:column;
+  align-items:center; gap:10px; text-align:center; pointer-events:none; }
+.lcenter h1{ margin:0; font-size:clamp(32px, 7vmax, 56px); line-height:1; color:#fff; text-shadow:0 4px 0 rgba(0,0,0,.45); }
+.lcenter .ghost{ margin-left:0; pointer-events:auto; background:var(--panel); border-color:var(--panel); }
 
-/* „Spielen“ unten rechts in der Ecke */
-.playBtn{ position:absolute; right:calc(env(safe-area-inset-right,0px) + 16px); bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
-  padding:12px 44px 14px; font-size:26px; }
-.playBtn:active{ transform:translateY(3px); }
+/* Unten rechts: gewaehlte Figur ueber dem Knopf zum Spielen */
+.playBox{ position:absolute; right:calc(env(safe-area-inset-right,0px) + 16px); bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
+  display:flex; flex-direction:column; align-items:stretch; gap:8px; }
+.figCard{ display:flex; align-items:center; gap:10px; background:var(--panel); border-radius:16px; padding:6px 14px 6px 8px;
+  box-shadow:0 4px 0 rgba(0,0,0,.25); }
+.figCard .fcv{ display:block; width:52px; height:52px; border-radius:50%; flex:0 0 auto;
+  background:radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--c,#888) 45%, #ffffff), color-mix(in srgb, var(--c,#888) 80%, #000000));
+  border:3px solid var(--c,#888); }
+.figCard .ftext{ display:flex; flex-direction:column; min-width:0; }
+.figCard b{ font-family:var(--display); font-weight:600; font-size:19px; line-height:1.1; }
+.figCard small{ font:800 12px var(--text); color:var(--muted); }
+
+/* Der Spielen-Knopf sitzt unter der Figurenkarte */
+.playBtn{ padding:12px 44px 14px; font-size:26px; }
 
 /* Spielmodus unten links in der Ecke */
 .modePick{ position:absolute; left:calc(env(safe-area-inset-left,0px) + 16px); bottom:calc(env(safe-area-inset-bottom,0px) + 16px);
@@ -219,6 +239,29 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .ghostBig{ background:var(--card); color:var(--ink); box-shadow:0 5px 0 var(--line); }
 .ghostBig:active{ box-shadow:0 2px 0 var(--line); }
 
+/* Belohnungsweg: Stationen untereinander, erreichte sind abgehakt */
+.pathPanel{ width:min(560px,100%); height:100%; display:flex; flex-direction:column; padding:12px 16px; text-align:left; }
+.pathHead{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.pathHead h1{ font-size:26px; } .pathHead .ghost{ margin:0; }
+.pathPanel .sub{ margin:2px 0 8px; }
+.path{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:none; display:flex; flex-direction:column; }
+.station{ position:relative; display:flex; align-items:center; gap:12px; padding:5px 4px 5px 0; }
+/* Die Linie, die die Stationen zu einem Weg verbindet */
+.station::before{ content:""; position:absolute; left:17px; top:0; bottom:0; width:4px; background:var(--line); }
+.station:first-child::before{ top:50%; } .station:last-child::before{ bottom:50%; }
+.station[data-state="done"]::before{ background:var(--accent); }
+.smark{ position:relative; z-index:1; flex:0 0 auto; width:38px; height:38px; border-radius:50%; display:flex;
+  align-items:center; justify-content:center; background:var(--card); border:3px solid var(--line);
+  font-family:var(--display); font-weight:600; font-size:16px; color:var(--muted); }
+.station[data-state="done"] .smark{ background:var(--accent); border-color:var(--accent); color:#3a2300; }
+.station[data-state="next"] .smark{ border-color:var(--fire); color:var(--ink); }
+.sreward{ display:flex; align-items:center; gap:6px; flex:1; min-width:0; font:800 13px var(--text); }
+.sreward b{ font-family:var(--display); font-weight:600; font-size:18px; }
+.sreward .taler, .sreward .training, .sreward .kristall{ margin:0; }
+.station small{ flex:0 0 auto; font:800 11.5px var(--text); color:var(--muted); }
+.station[data-state="next"] small{ color:var(--fire); }
+.station[data-state="open"]{ opacity:.6; }
+
 /* Abschluss einer Sitzung */
 .sumPanel{ width:min(520px,100%); }
 .sumPanel h1{ font-size:30px; }
@@ -243,6 +286,12 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .short .big{ padding:6px 36px 8px; font-size:21px; }
 .short .lcenter{ padding:8px 12px 12px; gap:4px; } .short .lcenter h1{ font-size:26px; } .short .lcenter .sub{ font-size:12px; }
 .short .playBtn{ padding:8px 32px 10px; font-size:22px; }
+.short .namePlate{ width:64px; height:64px; padding:4px; } .short .namePlate b{ font-size:15px; }
+.short .namePlate b[data-len="mittel"]{ font-size:12px; } .short .namePlate b[data-len="lang"]{ font-size:10px; }
+.short .figCard{ padding:4px 12px 4px 6px; gap:8px; } .short .figCard .fcv{ width:42px; height:42px; }
+.short .figCard b{ font-size:17px; } .short .figCard small{ font-size:11px; }
+.short .pathHead h1{ font-size:22px; } .short .smark{ width:32px; height:32px; font-size:14px; }
+.short .station::before{ left:14px; }
 .short .mbtn{ padding:5px 10px 6px; font-size:13px; } .short .modePick .mlabel{ font-size:10px; }
 .short .figHead h2{ font-size:21px; }
 .short .tile .tmedal{ width:62px; height:62px; } .short .tile .tname{ font-size:15px; }
