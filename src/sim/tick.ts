@@ -4,8 +4,8 @@ import { updateBall } from "./ball";
 import { autoFire, damage, moveEnt, ring, tryAttack, trySuper } from "./combat";
 import { bushAt, collide, inRect } from "./geometry";
 import { hyp, rnd } from "./math";
-import { matchResult, tutorialUpdate } from "./match";
-import { playing, respawnBrawler, type Brawler, type World } from "./world";
+import { matchResult, startGoldenGoal, tutorialUpdate } from "./match";
+import { playing, respawnKicker, type Kicker, type World } from "./world";
 
 /** Ein Befehl des Spielers. `auto` = tippen (Ziel automatisch), sonst selbst gezielt. */
 export type Command =
@@ -20,9 +20,9 @@ export interface PlayerInput { mx: number; my: number; aim: number | null; comma
 export const NO_INPUT: PlayerInput = { mx: 0, my: 0, aim: null, commands: [] };
 
 /** Steuert einen Bot für einen Tick. Kommt aus dem Modul `ai`. */
-export type Brain = (w: World, b: Brawler, dt: number) => void;
+export type Brain = (w: World, b: Kicker, dt: number) => void;
 
-function runCommands(w: World, p: Brawler, commands: Command[]): void {
+function runCommands(w: World, p: Kicker, commands: Command[]): void {
   for (const c of commands) {
     if (!p.alive || !playing(w)) return;
     if (c.kind === "attackAt") {
@@ -37,7 +37,7 @@ function runCommands(w: World, p: Brawler, commands: Command[]): void {
   }
 }
 
-function playerUpdate(w: World, p: Brawler, input: PlayerInput, dt: number): void {
+function playerUpdate(w: World, p: Kicker, input: PlayerInput, dt: number): void {
   let mx = input.mx, my = input.my;
   const l = hyp(mx, my);
   if (l > 1) { mx /= l; my /= l; }
@@ -61,7 +61,7 @@ export function tick(w: World, dt: number, input: PlayerInput, brain: Brain): vo
   const frozen = w.phase === "countdown";
   for (const b of w.ents) {
     b.reveal -= dt; b.sinceHurt += dt; b.sinceShot += dt; b.cool -= dt; b.pickCool -= dt; b.shieldT -= dt; b.turboT -= dt;
-    if (!b.alive) { b.respawn -= dt; if (b.respawn <= 0) respawnBrawler(w, b); continue; }
+    if (!b.alive) { b.respawn -= dt; if (b.respawn <= 0) respawnKicker(w, b); continue; }
     if (b.ammo < b.T.ammo) b.ammo = Math.min(b.T.ammo, b.ammo + dt / b.T.reload);
     // Super lädt durch Treffer (siehe damage) und zusätzlich mit der Zeit
     if (w.phase === "match" && b.superC < 1) b.superC = Math.min(1, b.superC + dt / SUPER_CHARGE_TIME);
@@ -113,7 +113,11 @@ export function tick(w: World, dt: number, input: PlayerInput, brain: Brain): vo
   if (w.phase === "match") updateBall(w, dt);
   if (w.phase === "match") {
     w.timeLeft -= dt;
-    if (w.timeLeft <= 0) { w.timeLeft = 0; w.phase = "ending"; w.endWait = 1.2; }
+    if (w.timeLeft <= 0) {
+      w.timeLeft = 0;
+      if (!w.golden && w.goldenTime > 0 && w.score[0] === w.score[1]) startGoldenGoal(w);
+      else { w.phase = "ending"; w.endWait = 1.2; }
+    }
   }
   if (w.phase === "ending") {
     w.endWait -= dt;

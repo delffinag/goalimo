@@ -1,9 +1,9 @@
 import { FIRE, FIRE_D, ICE, ICE_D } from "../data/colors";
 import { clamp } from "../sim/math";
-import type { Brawler } from "../sim/world";
-import { circle, DISPLAY_FONT, roundRect, type Ctx } from "./draw";
+import type { Kicker } from "../sim/world";
+import { circle, displayFont, roundRect, type Ctx } from "./draw";
 
-function drawWeapon(ctx: Ctx, b: Brawler): void {
+function drawWeapon(ctx: Ctx, b: Kicker): void {
   ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.aim);
   ctx.fillStyle = "#3a3a44";
   const gun = b.T.gun, r = b.r;
@@ -17,7 +17,7 @@ function drawWeapon(ctx: Ctx, b: Brawler): void {
 }
 
 /** Zubehör 0–5: Gürtel, Hörner, Antenne, Kappe, Stacheln, Ohren */
-function drawAccessory(ctx: Ctx, b: Brawler, crowned: boolean): void {
+function drawAccessory(ctx: Ctx, b: Kicker, crowned: boolean): void {
   const [a, c] = b.T.look, x = b.x, y = b.y, r = b.r;
   ctx.fillStyle = c; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 2;
   if (a === 0) { ctx.fillRect(x - r + 4, y + 6, (r - 4) * 2, 6); return; }
@@ -29,7 +29,7 @@ function drawAccessory(ctx: Ctx, b: Brawler, crowned: boolean): void {
   else if (a === 5) for (const s of [-1, 1]) { circle(ctx, x + s * 15, y - r + 5, 7); ctx.fill(); ctx.stroke(); }
 }
 
-export function drawBrawler(ctx: Ctx, b: Brawler): void {
+export function drawKicker(ctx: Ctx, b: Kicker): void {
   const col = b.team ? ICE : FIRE, dark = b.team ? ICE_D : FIRE_D;
   const hiddenOwn = b.team === 0 && b.bush >= 0;
   ctx.globalAlpha = hiddenOwn ? 0.6 : 1;
@@ -63,7 +63,7 @@ export function drawBrawler(ctx: Ctx, b: Brawler): void {
 }
 
 /** Lebensbalken, Munition (nur Spieler), Name und Lebenspunkte über der Figur */
-export function drawBars(ctx: Ctx, b: Brawler): void {
+export function drawBars(ctx: Ctx, b: Kicker): void {
   const w = 58, x = b.x - w / 2, y = b.y - b.r - 22;
   ctx.fillStyle = "rgba(0,0,0,.55)"; roundRect(ctx, x - 2, y - 2, w + 4, 11, 4); ctx.fill();
   ctx.fillStyle = b.dummy ? "#eeeeee" : b.team === 0 ? "#57d96e" : "#ff4d4d";
@@ -77,11 +77,11 @@ export function drawBars(ctx: Ctx, b: Brawler): void {
   }
   if (b.dummy) return;
   ctx.textAlign = "center"; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(0,0,0,.6)";
-  ctx.font = `16px ${DISPLAY_FONT}`;
+  ctx.font = displayFont(16);
   ctx.strokeText(b.name, b.x, y - 24);
   ctx.fillStyle = b.isPlayer ? "#ffc83d" : b.team === 0 ? "#ffffff" : "#cdeeff"; ctx.fillText(b.name, b.x, y - 24);
   const hp = String(Math.ceil(b.hp));
-  ctx.font = `15px ${DISPLAY_FONT}`;
+  ctx.font = displayFont(15);
   ctx.strokeText(hp, b.x, y - 5);
   ctx.fillStyle = "#fff"; ctx.fillText(hp, b.x, y - 5);
 }

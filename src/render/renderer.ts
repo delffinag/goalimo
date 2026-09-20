@@ -5,8 +5,8 @@ import { visibleTo } from "../sim/geometry";
 import { clamp } from "../sim/math";
 import { playing, type World } from "../sim/world";
 import type { Stage } from "../ui/stage";
-import { drawBars, drawBrawler } from "./brawler";
-import { circle, DISPLAY_FONT, type Ctx } from "./draw";
+import { drawBars, drawKicker } from "./kicker";
+import { circle, displayFont, type Ctx } from "./draw";
 import { drawBall, drawBushes, drawFloor, drawWalls } from "./field";
 
 export interface Renderer {
@@ -95,14 +95,14 @@ export function createRenderer(canvas: HTMLCanvasElement, stage: Stage): Rendere
       }
       drawWalls(ctx, w.map);
       const vis = w.ents.filter(b => b.alive && visibleTo(w, b, 0)).sort((a, b) => a.y - b.y);
-      for (const b of vis) drawBrawler(ctx, b);
+      for (const b of vis) drawKicker(ctx, b);
       for (const p of w.projs) {
         circle(ctx, p.x, p.y, p.rad); ctx.fillStyle = p.team ? ICE : FIRE; ctx.fill();
         circle(ctx, p.x, p.y, p.rad * 0.5); ctx.fillStyle = "#fff"; ctx.fill();
       }
       drawBushes(ctx, w);
       // Eigene Figuren im Busch bleiben halb durchsichtig sichtbar
-      for (const b of vis) if (b.team === 0 && b.bush >= 0) drawBrawler(ctx, b);
+      for (const b of vis) if (b.team === 0 && b.bush >= 0) drawKicker(ctx, b);
       for (const l of w.lobs) {
         const f = l.t / l.dur, x = l.x0 + (l.x1 - l.x0) * f, y = l.y0 + (l.y1 - l.y0) * f, h = Math.sin(Math.PI * f) * 130;
         ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(x, y, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
@@ -115,7 +115,7 @@ export function createRenderer(canvas: HTMLCanvasElement, stage: Stage): Rendere
         ctx.globalAlpha = 1 - p; ctx.lineWidth = 6; ctx.strokeStyle = f.col; ctx.stroke(); ctx.globalAlpha = 1;
       }
       for (const b of vis) drawBars(ctx, b);
-      ctx.font = `20px ${DISPLAY_FONT}`; ctx.textAlign = "center";
+      ctx.font = displayFont(20); ctx.textAlign = "center";
       for (const f of w.floaters) {
         ctx.globalAlpha = 1 - f.t / 0.8; ctx.lineWidth = 4; ctx.strokeStyle = "rgba(0,0,0,.6)";
         ctx.strokeText(f.txt, f.x, f.y); ctx.fillStyle = f.col; ctx.fillText(f.txt, f.x, f.y);

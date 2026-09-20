@@ -10,4 +10,5 @@ export function roundRect(ctx: Ctx, x: number, y: number, w: number, h: number, 
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
 
-export const DISPLAY_FONT = "'Lilita One', 'Trebuchet MS', sans-serif";
+/** Überschriftenschrift auf der Spielfläche: Fredoka 600, lokal aus public/fonts/ */
+export const displayFont = (size: number) => `600 ${size}px Fredoka, "Trebuchet MS", sans-serif`;

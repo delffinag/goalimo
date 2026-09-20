@@ -6,11 +6,11 @@ import { teamColor } from "../data/colors";
 import { goalCenter } from "../data/maps";
 import { collide, visibleTo } from "./geometry";
 import { clamp, hyp, rnd } from "./math";
-import type { Brawler, Ring, World } from "./world";
+import type { Kicker, Ring, World } from "./world";
 
 export const ring = (x: number, y: number, r0: number, r1: number, dur: number, col: string): Ring => ({ x, y, r0, r1, t: 0, dur, col });
 
-function spawnProj(w: World, b: Brawler, a: number, speed: number, range: number, dmg: number, pierce: boolean, big: boolean, sup: boolean): void {
+function spawnProj(w: World, b: Kicker, a: number, speed: number, range: number, dmg: number, pierce: boolean, big: boolean, sup: boolean): void {
   const spd = speed * PROJ_SPEED;
   w.projs.push({
     x: b.x + Math.cos(a) * b.r, y: b.y + Math.sin(a) * b.r, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
@@ -18,7 +18,7 @@ function spawnProj(w: World, b: Brawler, a: number, speed: number, range: number
   });
 }
 
-function fire(w: World, b: Brawler, ang: number, d01: number, isSup: boolean): void {
+function fire(w: World, b: Kicker, ang: number, d01: number, isSup: boolean): void {
   const s = isSup ? b.T.sup : b.T.shot;
   const range = (isSup && "range" in s && s.range) || b.T.range;
   b.reveal = 1.0; b.sinceShot = 0; b.aim = ang;
@@ -61,14 +61,14 @@ function fire(w: World, b: Brawler, ang: number, d01: number, isSup: boolean): v
 }
 
 /** Startgeschwindigkeit `pw`: Bei Reibung exp(-k·t) rollt der Ball insgesamt pw / k weit. */
-export function kick(w: World, b: Brawler, ang: number, pw: number): void {
+export function kick(w: World, b: Kicker, ang: number, pw: number): void {
   const B = w.ball;
-  B.carrier = null; B.last = b; B.vx = Math.cos(ang) * pw; B.vy = Math.sin(ang) * pw;
+  B.carrier = null; B.last = b; B.passer = b; B.vx = Math.cos(ang) * pw; B.vy = Math.sin(ang) * pw;
   b.pickCool = PICKUP_COOLDOWN; b.aim = ang; b.reveal = 1;
 }
 
 /** Mit Ball: normaler Schuss. Ohne Ball: Angriff mit Munition. */
-export function tryAttack(w: World, b: Brawler, ang: number, d01: number): boolean {
+export function tryAttack(w: World, b: Kicker, ang: number, d01: number): boolean {
   if (w.ball.carrier === b) {
     if (!b.alive || b.cool > 0) return false;
     kick(w, b, ang, KICK_DIST * BALL_FRICTION); b.cool = ATTACK_COOLDOWN; return true;
@@ -78,7 +78,7 @@ export function tryAttack(w: World, b: Brawler, ang: number, d01: number): boole
 }
 
 /** Mit Ball: Super-Schuss. Ohne Ball: Super der Figur. */
-export function trySuper(w: World, b: Brawler, ang: number, d01: number): boolean {
+export function trySuper(w: World, b: Kicker, ang: number, d01: number): boolean {
   if (!b.alive || b.superC < 1) return false;
   b.superC = 0;
   if (w.ball.carrier === b) { kick(w, b, ang, SUPER_KICK_DIST * BALL_FRICTION); w.ball.superT = 0.6; }
@@ -87,7 +87,7 @@ export function trySuper(w: World, b: Brawler, ang: number, d01: number): boolea
   return true;
 }
 
-export function damage(w: World, t: Brawler, amount: number, src: Brawler | null, isSup: boolean): void {
+export function damage(w: World, t: Kicker, amount: number, src: Kicker | null, isSup: boolean): void {
   if (!t.alive) return;
   const amt = Math.round(amount * (t.shieldT > 0 ? SHIELD_FACTOR : 1));
   t.hp -= amt; t.sinceHurt = 0; t.reveal = Math.max(t.reveal, 0.8);
@@ -105,14 +105,14 @@ export function damage(w: World, t: Brawler, amount: number, src: Brawler | null
 }
 
 /** Tippen statt Zielen: mit Ball aufs gegnerische Tor, sonst auf den nächsten sichtbaren Gegner */
-export function autoFire(w: World, b: Brawler, isSup: boolean): boolean {
+export function autoFire(w: World, b: Kicker, isSup: boolean): boolean {
   if (!b.alive) return false;
   if (w.ball.carrier === b) {
     const g = goalCenter(1 - b.team), ang = Math.atan2(g.y - b.y, g.x - b.x);
     return isSup ? trySuper(w, b, ang, 1) : tryAttack(w, b, ang, 1);
   }
   const T = b.T, range = (isSup && "range" in T.sup && T.sup.range) || T.range;
-  let tgt: Brawler | null = null, bd = 1e9;
+  let tgt: Kicker | null = null, bd = 1e9;
   for (const e of w.ents) {
     if (!e.alive || e.team === b.team || !visibleTo(w, e, b.team)) continue;
     const d = hyp(e.x - b.x, e.y - b.y);
@@ -123,7 +123,7 @@ export function autoFire(w: World, b: Brawler, isSup: boolean): boolean {
   return isSup ? trySuper(w, b, ang, d01) : tryAttack(w, b, ang, d01);
 }
 
-export function moveEnt(w: World, b: Brawler, mx: number, my: number, dt: number): void {
+export function moveEnt(w: World, b: Kicker, mx: number, my: number, dt: number): void {
   const ox = b.x, oy = b.y;
   const sp = b.T.speed * (w.ball.carrier === b ? CARRY_SPEED : 1) * (b.turboT > 0 ? TURBO_FACTOR : 1);
   b.x += mx * sp * dt; b.y += my * sp * dt;

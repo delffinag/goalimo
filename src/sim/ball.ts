@@ -1,9 +1,9 @@
-import { BALL_FRICTION, COUNTDOWN_AFTER_GOAL, H, W, WIN_GOALS } from "../data/balance";
+import { BALL_FRICTION, COUNTDOWN_AFTER_GOAL, H, PASS_SUPER_BONUS, W, WIN_GOALS } from "../data/balance";
 import { GOALS } from "../data/maps";
 import { ring } from "./combat";
 import { inRect } from "./geometry";
 import { clamp, hyp, rnd } from "./math";
-import { resetBall, respawnBrawler, type World } from "./world";
+import { resetBall, respawnKicker, type Kicker, type World } from "./world";
 
 export function updateBall(w: World, dt: number): void {
   const B = w.ball;
@@ -33,12 +33,20 @@ export function updateBall(w: World, dt: number): void {
     if (B.y < B.r) { B.y = B.r; B.vy = Math.abs(B.vy) * 0.7; }
     if (B.y > H - B.r) { B.y = H - B.r; B.vy = -Math.abs(B.vy) * 0.7; }
     for (const b of w.ents) if (b.alive && !b.dummy && b.pickCool <= 0 && hyp(b.x - B.x, b.y - B.y) < b.r + B.r) {
-      B.carrier = b; B.last = b;
+      const passer = B.passer;
+      B.carrier = b; B.last = b; B.passer = null;
+      if (passer && passer !== b && passer.team === b.team) passBonus(w, passer);
       if (!b.isPlayer) b.ai.passWait = rnd(w.rng, 0.8, 1.4);
       break;
     }
   }
   for (let tm = 0; tm < 2; tm++) if (inRect(B.x, B.y, GOALS[tm])) { scoreGoal(w, 1 - tm); break; }
+}
+
+/** Ein Pass, der ankommt, lädt den Super des Passgebers um 25 % */
+function passBonus(w: World, passer: Kicker): void {
+  passer.superC = Math.min(1, passer.superC + PASS_SUPER_BONUS);
+  if (passer.team === 0) w.floaters.push({ x: passer.x, y: passer.y - 50, t: 0, txt: "Pass! Super +25 %", col: "#ffc83d" });
 }
 
 /** Tor für Team `tm`. Wer den Ball zuletzt berührt hat, steht in der Meldung. */
@@ -50,7 +58,8 @@ export function scoreGoal(w: World, tm: number): void {
   w.goalFlash = 2.6;
   w.events.push({ type: "goal", team: tm, msg: w.goalMsg });
   resetBall(w); w.projs = []; w.lobs = [];
-  for (const b of w.ents) { respawnBrawler(w, b); b.cool = 0; b.pickCool = 0; }
-  if (w.score[tm] >= WIN_GOALS) { w.phase = "ending"; w.endWait = 1.8; }
+  for (const b of w.ents) { respawnKicker(w, b); b.cool = 0; b.pickCool = 0; }
+  // Im Golden Goal beendet das erste Tor das Spiel
+  if (w.golden || w.score[tm] >= WIN_GOALS) { w.phase = "ending"; w.endWait = 1.8; }
   else { w.phase = "countdown"; w.countdown = COUNTDOWN_AFTER_GOAL; }
 }

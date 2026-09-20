@@ -7,40 +7,40 @@ import { kick, moveEnt, tryAttack, trySuper } from "../sim/combat";
 import { los, losWide, visibleTo } from "../sim/geometry";
 import { clamp, hyp, norm, rnd } from "../sim/math";
 import type { Brain } from "../sim/tick";
-import type { Brawler, World } from "../sim/world";
+import type { Kicker, World } from "../sim/world";
 import { steerTo } from "./pathfinding";
 
 type Vec = [number, number];
 
 /** Zielen mit leichtem Vorhalt und absichtlichem Fehler (`ai.noise`), damit Ausweichen möglich bleibt */
-function aimAt(w: World, b: Brawler, t: Brawler, spd: number, dur: number): { ang: number; d01: number } {
+function aimAt(w: World, b: Kicker, t: Kicker, spd: number, dur: number): { ang: number; d01: number } {
   const lead = spd ? hyp(t.x - b.x, t.y - b.y) / (spd * PROJ_SPEED) : dur * LOB_TIME;
   const tx = t.x + t.vx * lead * 0.3, ty = t.y + t.vy * lead * 0.3;
   return { ang: Math.atan2(ty - b.y, tx - b.x) + rnd(w.rng, -b.ai.noise, b.ai.noise), d01: Math.min(1, hyp(tx - b.x, ty - b.y) / b.T.range) };
 }
 
 /** Abstand halten und seitlich ausweichen */
-function combatMove(b: Brawler, tgt: Brawler, bd: number): Vec {
+function combatMove(b: Kicker, tgt: Kicker, bd: number): Vec {
   const T = b.T, want = T.gun === "shotgun" ? T.range * 0.45 : T.range * 0.7;
   const [ux, uy] = norm(tgt.x - b.x, tgt.y - b.y);
   const radial = bd > want + 40 ? 1 : bd < want - 40 ? -1 : 0;
   return norm(ux * radial - uy * b.ai.strafe * 0.8, uy * radial + ux * b.ai.strafe * 0.8);
 }
 
-function dirTo(w: World, b: Brawler, p: Point): Vec {
+function dirTo(w: World, b: Kicker, p: Point): Vec {
   const g = steerTo(w.map, b, p);
   return hyp(g.x - b.x, g.y - b.y) > 10 ? norm(g.x - b.x, g.y - b.y) : [0, 0];
 }
 
-function holdPoint(b: Brawler): Point {
+function holdPoint(b: Kicker): Point {
   if (b.slot === 2) return { x: b.team ? W - 420 : 420, y: 550 };
   return { x: b.team ? W - 800 : 800, y: LANES[b.slot] };
 }
 
 /** Passen, wenn der Bot bedrängt wird und ein Mitspieler freier und näher am Tor steht */
-function tryPass(w: World, b: Brawler, goalDist: number, foes: Brawler[]): boolean {
+function tryPass(w: World, b: Kicker, goalDist: number, foes: Kicker[]): boolean {
   const eg = goalCenter(1 - b.team);
-  let best: Brawler | null = null, bs = 0;
+  let best: Kicker | null = null, bs = 0;
   for (const m of w.ents) {
     if (m === b || !m.alive || m.team !== b.team) continue;
     const dm = hyp(m.x - b.x, m.y - b.y);
@@ -58,9 +58,9 @@ function tryPass(w: World, b: Brawler, goalDist: number, foes: Brawler[]): boole
   return true;
 }
 
-type BallPlan = { carry: true } | { carry: false; m: Vec; tgt?: Brawler };
+type BallPlan = { carry: true } | { carry: false; m: Vec; tgt?: Kicker };
 
-function ballBrain(w: World, b: Brawler, tgt: Brawler | null, bd: number, canHit: boolean, dt: number): BallPlan {
+function ballBrain(w: World, b: Kicker, tgt: Kicker | null, bd: number, canHit: boolean, dt: number): BallPlan {
   const B = w.ball, eg = goalCenter(1 - b.team);
   if (B.carrier === b) {
     const [mx, my] = dirTo(w, b, eg);
@@ -79,7 +79,7 @@ function ballBrain(w: World, b: Brawler, tgt: Brawler | null, bd: number, canHit
   }
   if (!B.carrier) {
     // Nur der Bot, der dem freien Ball am nächsten ist, läuft hin
-    let chaser: Brawler | null = null, cd = 1e9;
+    let chaser: Kicker | null = null, cd = 1e9;
     for (const e of w.ents) if (e.team === b.team && e.alive && !e.isPlayer) {
       const d = hyp(e.x - B.x, e.y - B.y);
       if (d < cd) { cd = d; chaser = e; }
@@ -101,7 +101,7 @@ export const botThink: Brain = (w, b, dt) => {
   const ai = b.ai, T = b.T;
   ai.pathT -= dt; ai.shootDelay -= dt; ai.strafeT -= dt;
   if (ai.strafeT <= 0) { ai.strafe *= -1; ai.strafeT = rnd(w.rng, 0.6, 1.6); }
-  let tgt: Brawler | null = null, bd = 1e9;
+  let tgt: Kicker | null = null, bd = 1e9;
   for (const e of w.ents) {
     if (!e.alive || e.team === b.team || e.dummy || !visibleTo(w, e, b.team)) continue;
     const d = hyp(e.x - b.x, e.y - b.y);
@@ -109,7 +109,7 @@ export const botThink: Brain = (w, b, dt) => {
   }
   if (tgt !== ai.target) { ai.target = tgt; ai.shootDelay = Math.max(ai.shootDelay, rnd(w.rng, 0.25, 0.5)); }
   const isLob = T.shot.kind === "lob";
-  const inReach = (t: Brawler, d: number) => d < T.range * 0.95 && (isLob || los(w.map, b, t));
+  const inReach = (t: Kicker, d: number) => d < T.range * 0.95 && (isLob || los(w.map, b, t));
   let canHit = !!tgt && inReach(tgt, bd);
 
   const plan = ballBrain(w, b, tgt, bd, canHit, dt);

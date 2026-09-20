@@ -2,7 +2,7 @@ import { H, W } from "../data/balance";
 import type { Point } from "../data/types";
 import { inRect, losWide } from "../sim/geometry";
 import { clamp, hyp } from "../sim/math";
-import type { Brawler, LoadedMap } from "../sim/world";
+import type { Kicker, LoadedMap } from "../sim/world";
 
 // Wegfindung: Raster + Breitensuche
 const GC = 50, GW = W / GC, GH = H / GC;
@@ -55,7 +55,7 @@ export function findPath(map: LoadedMap, sx: number, sy: number, tx: number, ty:
 }
 
 /** Nächster Punkt, auf den der Bot zulaufen soll: direkt, wenn frei, sonst entlang des Pfads */
-export function steerTo(map: LoadedMap, b: Brawler, goal: Point): Point {
+export function steerTo(map: LoadedMap, b: Kicker, goal: Point): Point {
   if (losWide(map, b, goal, b.r * 0.9)) return goal;
   const ai = b.ai;
   if (ai.pathT <= 0 || !ai.path) { ai.path = findPath(map, b.x, b.y, goal.x, goal.y); ai.pathT = 0.5; }

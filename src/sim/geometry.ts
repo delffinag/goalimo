@@ -1,7 +1,7 @@
 import { BUSH_REVEAL_DIST, H, W } from "../data/balance";
 import type { Point, Rect } from "../data/types";
 import { clamp, hyp, norm } from "./math";
-import type { Brawler, LoadedMap, World } from "./world";
+import type { Kicker, LoadedMap, World } from "./world";
 
 export const inRect = (x: number, y: number, r: Rect, pad = 0) =>
   x > r.x - pad && x < r.x + r.w + pad && y > r.y - pad && y < r.y + r.h + pad;
@@ -55,7 +55,7 @@ export function collide(map: LoadedMap, e: { x: number; y: number; r: number }):
 }
 
 /** Im Busch sieht das andere Team eine Figur erst aus der Nähe oder wenn sie sich verrät */
-export function visibleTo(w: World, e: Brawler, team: number): boolean {
+export function visibleTo(w: World, e: Kicker, team: number): boolean {
   if (e.team === team) return true;
   if (!e.alive) return false;
   if (e.bush < 0 || e.reveal > 0) return true;

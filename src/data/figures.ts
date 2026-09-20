@@ -1,7 +1,7 @@
 import type {
   BulletSpec, DashSpec, FigureType, Gun, HealSpec, LobSpec, Look, ShieldSpec, ShotSpec, SpreadSpec, SuperSpec, TurboSpec
 } from "./types";
-import { LEVEL_BONUS, MAX_LEVEL } from "./balance";
+import { STUFEN_BONUS, MAX_STUFE } from "./balance";
 
 // Figuren-Daten: Balancing passiert hier, nicht im Code
 // Figuren-Baukasten: Angriffe (S) und Supers (U)
@@ -126,11 +126,11 @@ for (const [k, color, strength] of LINEUP) {
 export const FIGURE_KEYS = LINEUP.map(l => l[0]);
 export const DEFAULT_FIGURE = FIGURE_KEYS[0];
 
-export const clampLevel = (lv: number | undefined) => Math.min(MAX_LEVEL, Math.max(1, lv || 1));
+export const clampStufe = (lv: number | undefined) => Math.min(MAX_STUFE, Math.max(1, lv || 1));
 
 /** Jede Stufe über 1 gibt +8 % Leben, Schaden und Heilung */
-export function scaledType(key: string, level: number): FigureType {
-  const T = FIGURES[key], m = 1 + LEVEL_BONUS * (clampLevel(level) - 1);
+export function scaledType(key: string, stufe: number): FigureType {
+  const T = FIGURES[key], m = 1 + STUFEN_BONUS * (clampStufe(stufe) - 1);
   if (m === 1) return T;
   const sc = <X extends SuperSpec>(o: X): X => {
     const c = { ...o };

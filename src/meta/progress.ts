@@ -1,34 +1,44 @@
 import {
-  BOX_ITEMS, FIGURE_GEMS, LOOT_TABLE, LOSS_GEMS, MAX_LEVEL, NAME_MAX, NAME_MIN, REWARDS, UPGRADE_COST,
-  type CosmeticReward, type LootKind
+  ERFAHRUNG, LOSS_KRISTALLE, MAX_STUFE, NAME_MAX, NAME_MIN, PRAEMIE_ANGEBOTE, REWARDS, TRAINING_COST,
+  type CosmeticReward, type PraemieKind
 } from "../data/balance";
-import { clampLevel, DEFAULT_FIGURE, FIGURES } from "../data/figures";
+import { clampStufe, DEFAULT_FIGURE, FIGURES } from "../data/figures";
 import type { MatchResult, PlayerSetup } from "../sim/world";
 import type { Store } from "./storage";
 
-// Dieselben Schlüssel wie im Prototyp, damit vorhandene Spielstände weiter gelten
 const K = {
-  player: "fgf-player", gems: "fgf-gems", coins: "fgf-coins", pp: "fgf-pp", boxes: "fgf-boxes", levels: "fgf-levels",
-  figGems: "fgf-figgems", unlocked: "fgf-unlocked", chosen: "fgf-chosen", tut: "fgf-tut"
+  player: "gl-name", kristalle: "gl-kristalle", taler: "gl-taler", training: "gl-training",
+  siegpraemien: "gl-siegpraemien", stufen: "gl-trainingsstufen", erfahrung: "gl-erfahrung",
+  unlocked: "gl-belohnungen", chosen: "gl-figur", tut: "gl-uebung", migriert: "gl-migriert"
 };
+
+/** Schlüssel des Vorgängers (Münzen, Powerpunkte, Juwelen, Boxen). Werden einmalig übernommen. */
+const OLD: [alt: string, neu: string][] = [
+  ["fgf-player", K.player], ["fgf-coins", K.taler], ["fgf-pp", K.training], ["fgf-gems", K.kristalle],
+  ["fgf-boxes", K.siegpraemien], ["fgf-levels", K.stufen], ["fgf-figgems", K.erfahrung],
+  ["fgf-unlocked", K.unlocked], ["fgf-chosen", K.chosen], ["fgf-tut", K.tut]
+];
 
 export interface Progress {
   playerName: string;
-  coins: number; pp: number; gems: number; boxes: number;
-  levels: Record<string, number>;
-  figGems: Record<string, number>;
+  taler: number; training: number; kristalle: number; siegpraemien: number;
+  /** Trainingsstufe 1–5 je Figur */
+  stufen: Record<string, number>;
+  /** Erfahrung (EP) je Figur, steigt nur */
+  erfahrung: Record<string, number>;
   unlocked: Set<string>;
   chosen: string;
   tutDone: boolean;
 }
 
-export interface LootItem { k: LootKind; n: number }
+/** Ein Angebot der Siegprämie mit fester Menge, offen sichtbar */
+export interface PraemieItem { k: PraemieKind; n: number }
 
 export interface MatchSummary {
   result: MatchResult;
-  boxWon: boolean;
-  gemsLost: number;
-  figure: string; figChange: number; figTotal: number;
+  praemieWon: boolean;
+  kristalleLost: number;
+  figure: string; epPlus: number; epTotal: number;
   fresh: CosmeticReward[];
 }
 
@@ -37,19 +47,31 @@ function json<T>(s: string | null, fallback: T): T {
   try { return (s && JSON.parse(s)) || fallback; } catch { return fallback; }
 }
 
-/** Kosmetik über Juwelen-Schwellen: einmal freigeschaltet bleibt freigeschaltet */
+/** Kosmetik über Kristall-Schwellen: einmal freigeschaltet bleibt freigeschaltet */
 function unlockRewards(p: Progress): CosmeticReward[] {
-  const fresh = REWARDS.filter(r => !p.unlocked.has(r.id) && p.gems >= r.cost);
+  const fresh = REWARDS.filter(r => !p.unlocked.has(r.id) && p.kristalle >= r.cost);
   for (const r of fresh) p.unlocked.add(r.id);
   return fresh;
 }
 
+/** Alte Spielstände einmalig übernehmen: alte Schlüssel lesen, unter den neuen Namen schreiben. */
+export function migrate(store: Store): void {
+  if (store.get(K.migriert) === "1") return;
+  for (const [alt, neu] of OLD) {
+    const v = store.get(alt);
+    if (v !== null && store.get(neu) === null) store.set(neu, v);
+  }
+  store.set(K.migriert, "1");
+}
+
 export function loadProgress(store: Store): Progress {
+  migrate(store);
   const chosen = store.get(K.chosen);
   const p: Progress = {
     playerName: (store.get(K.player) || "").trim(),
-    coins: int(store.get(K.coins)), pp: int(store.get(K.pp)), gems: int(store.get(K.gems)), boxes: int(store.get(K.boxes)),
-    levels: json(store.get(K.levels), {}), figGems: json(store.get(K.figGems), {}),
+    taler: int(store.get(K.taler)), training: int(store.get(K.training)), kristalle: int(store.get(K.kristalle)),
+    siegpraemien: int(store.get(K.siegpraemien)),
+    stufen: json(store.get(K.stufen), {}), erfahrung: json(store.get(K.erfahrung), {}),
     unlocked: new Set(json<string[]>(store.get(K.unlocked), [])),
     chosen: chosen && FIGURES[chosen] ? chosen : DEFAULT_FIGURE,
     tutDone: store.get(K.tut) === "1"
@@ -60,8 +82,9 @@ export function loadProgress(store: Store): Progress {
 
 export function saveProgress(store: Store, p: Progress): void {
   if (p.playerName) store.set(K.player, p.playerName);
-  store.set(K.coins, String(p.coins)); store.set(K.pp, String(p.pp)); store.set(K.gems, String(p.gems)); store.set(K.boxes, String(p.boxes));
-  store.set(K.levels, JSON.stringify(p.levels)); store.set(K.figGems, JSON.stringify(p.figGems));
+  store.set(K.taler, String(p.taler)); store.set(K.training, String(p.training));
+  store.set(K.kristalle, String(p.kristalle)); store.set(K.siegpraemien, String(p.siegpraemien));
+  store.set(K.stufen, JSON.stringify(p.stufen)); store.set(K.erfahrung, JSON.stringify(p.erfahrung));
   store.set(K.unlocked, JSON.stringify([...p.unlocked])); store.set(K.chosen, p.chosen);
   if (p.tutDone) store.set(K.tut, "1");
 }
@@ -75,62 +98,56 @@ export function setPlayerName(p: Progress, raw: string): boolean {
   return true;
 }
 
-export const levelOf = (p: Progress, key: string) => clampLevel(p.levels[key]);
-export const figGemsOf = (p: Progress, key: string) => p.figGems[key] || 0;
+export const stufeOf = (p: Progress, key: string) => clampStufe(p.stufen[key]);
+export const epOf = (p: Progress, key: string) => p.erfahrung[key] || 0;
 
-export function upgradeCost(p: Progress, key: string): [coins: number, pp: number] | null {
-  const lv = levelOf(p, key);
-  return lv >= MAX_LEVEL ? null : UPGRADE_COST[lv + 1];
+export function trainingCost(p: Progress, key: string): [taler: number, training: number] | null {
+  const lv = stufeOf(p, key);
+  return lv >= MAX_STUFE ? null : TRAINING_COST[lv + 1];
 }
-export function canUpgrade(p: Progress, key: string): boolean {
-  const cost = upgradeCost(p, key);
-  return !!cost && p.coins >= cost[0] && p.pp >= cost[1];
+export function canTrainieren(p: Progress, key: string): boolean {
+  const cost = trainingCost(p, key);
+  return !!cost && p.taler >= cost[0] && p.training >= cost[1];
 }
-export function upgrade(p: Progress, key: string): boolean {
-  const cost = upgradeCost(p, key);
-  if (!cost || !canUpgrade(p, key)) return false;
-  p.coins -= cost[0]; p.pp -= cost[1]; p.levels[key] = levelOf(p, key) + 1;
+export function trainieren(p: Progress, key: string): boolean {
+  const cost = trainingCost(p, key);
+  if (!cost || !canTrainieren(p, key)) return false;
+  p.taler -= cost[0]; p.training -= cost[1]; p.stufen[key] = stufeOf(p, key) + 1;
   return true;
 }
 
-/** Nur ein Sieg gibt eine Box. Niederlage kostet Juwelen (nie unter 0). Figuren-Juwelen: Sieg +8, Unentschieden +2, Niederlage −4. */
+/**
+ * Nur ein Sieg gibt eine Siegprämie. Unentschieden gibt nichts, eine Niederlage kostet 3 Kristalle (nie unter 0).
+ * Erfahrung steigt immer: Sieg +10, Unentschieden +5, Niederlage +2.
+ */
 export function applyMatchResult(p: Progress, figure: string, result: MatchResult): MatchSummary {
-  if (result === "win") p.boxes++;
-  const figBefore = figGemsOf(p, figure);
-  p.figGems[figure] = Math.max(0, figBefore + FIGURE_GEMS[result]);
-  const gemsBefore = p.gems;
-  if (result === "loss") p.gems = Math.max(0, p.gems + LOSS_GEMS);
+  if (result === "win") p.siegpraemien++;
+  const before = epOf(p, figure);
+  p.erfahrung[figure] = before + ERFAHRUNG[result];
+  const kristalleBefore = p.kristalle;
+  if (result === "loss") p.kristalle = Math.max(0, p.kristalle + LOSS_KRISTALLE);
   return {
-    result, boxWon: result === "win", gemsLost: gemsBefore - p.gems,
-    figure, figChange: p.figGems[figure] - figBefore, figTotal: p.figGems[figure], fresh: unlockRewards(p)
+    result, praemieWon: result === "win", kristalleLost: kristalleBefore - p.kristalle,
+    figure, epPlus: ERFAHRUNG[result], epTotal: p.erfahrung[figure], fresh: unlockRewards(p)
   };
 }
 
-function rollItem(random: () => number): LootItem {
-  const r = random();
-  const row = LOOT_TABLE.find(x => r < x.upTo) ?? LOOT_TABLE[LOOT_TABLE.length - 1];
-  return { k: row.k, n: row.min + Math.floor(random() * (row.max - row.min + 1)) };
+/** Die drei offenen Angebote einer Siegprämie: je eines pro Währung, Menge innerhalb der Spanne */
+export function praemieAngebote(random: () => number = Math.random): PraemieItem[] {
+  return PRAEMIE_ANGEBOTE.map(a => ({ k: a.k, n: a.min + Math.floor(random() * (a.max - a.min + 1)) }));
 }
 
-/** Eine Box enthält 3 Objekte: Münzen 10–30, Powerpunkte 5–15, selten Juwelen 1–4 */
-export function rollBox(random: () => number = Math.random): LootItem[] {
-  return Array.from({ length: BOX_ITEMS }, () => rollItem(random));
-}
-
-export function useBox(p: Progress): boolean {
-  if (p.boxes < 1) return false;
-  p.boxes--;
-  return true;
-}
-
-export function collectItem(p: Progress, item: LootItem): CosmeticReward[] {
+/** Der Spieler wählt genau eines der Angebote. Verbraucht eine Siegprämie. */
+export function waehlePraemie(p: Progress, item: PraemieItem): CosmeticReward[] | null {
+  if (p.siegpraemien < 1) return null;
+  p.siegpraemien--;
   p[item.k] += item.n;
   return unlockRewards(p);
 }
 
 export function playerSetup(p: Progress): PlayerSetup {
   return {
-    figure: p.chosen, name: p.playerName, level: levelOf(p, p.chosen),
+    figure: p.chosen, name: p.playerName, stufe: stufeOf(p, p.chosen),
     cosmetics: { krone: p.unlocked.has("krone"), gold: p.unlocked.has("gold"), spur: p.unlocked.has("spur") }
   };
 }
