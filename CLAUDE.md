@@ -45,6 +45,8 @@ den Code aber sauber in Module aufteilen.
 - Beim ersten Start einmalig Spielernamen abfragen (2–12 Zeichen), danach nicht mehr änderbar.
 - Lobby: Name oben links, Taler/Trainingspunkte/Kristalle oben rechts, Knopf „Figuren“ links,
   Spielmodus unten links, „Spielen“ unten rechts.
+- Medaille: Jeder Sieg gibt eine bleibende Medaille, sie kann nie verloren gehen. Gold für einen Sieg ohne
+  Gegentreffer, Silber ab zwei Punkten Vorsprung, sonst Bronze. Medaillenspiegel in der Lobby unter dem Namen.
 - Belohnung: Ein Sieg gibt eine Siegprämie. Der Spieler wählt 1 von 3 sichtbaren Angeboten
   (40–60 Taler, 15–25 Trainingspunkte oder 2–4 Kristalle). Keine Zufallsziehung, keine Boxen.
   Niederlage: −3 Kristalle (nie unter 0). Erfahrung (EP) pro Figur, steigt nur: Sieg +10, Unentschieden +5, Niederlage +2.

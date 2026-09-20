@@ -66,6 +66,20 @@ export const LOSS_KRISTALLE = -3;
 /** Erfahrung (EP) pro Figur. Steigt nur. */
 export const ERFAHRUNG = { win: 10, draw: 5, loss: 2 } as const;
 
+/**
+ * Medaillen: bleibende Auszeichnung für jeden Sieg. Sie werden nur erspielt, nie gekauft,
+ * und sie können nie wieder verloren gehen. Welche Medaille es gibt, hängt am Ergebnis.
+ */
+export type MedalKind = "gold" | "silber" | "bronze";
+export const MEDALS: Record<MedalKind, { name: string; why: string }> = {
+  gold: { name: "Goldmedaille", why: "Sieg ohne Gegentreffer" },
+  silber: { name: "Silbermedaille", why: "Sieg mit mindestens zwei Punkten Vorsprung" },
+  bronze: { name: "Bronzemedaille", why: "Knapper Sieg" }
+};
+export const MEDAL_KINDS: MedalKind[] = ["gold", "silber", "bronze"];
+/** Ab diesem Vorsprung gibt es Silber statt Bronze */
+export const SILBER_VORSPRUNG = 2;
+
 export interface CosmeticReward { id: "krone" | "gold" | "spur"; cost: number; icon: string; name: string; desc: string }
 export const REWARDS: CosmeticReward[] = [
   { id: "krone", cost: 10, icon: "👑", name: "Goldene Krone", desc: "Deine Figur trägt eine Krone." },

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { FIGURES, scaledType } from "../../src/data/figures";
 import {
-  applyMatchResult, canTrainieren, epOf, loadProgress, playerSetup, praemieAngebote, saveProgress, setPlayerName,
-  stufeOf, trainieren, waehlePraemie
+  applyMatchResult, canTrainieren, epOf, loadProgress, medalFor, medalTotal, playerSetup, praemieAngebote,
+  saveProgress, setPlayerName, stufeOf, trainieren, waehlePraemie
 } from "../../src/meta/progress";
 import { memoryStore } from "../../src/meta/storage";
 
@@ -43,6 +43,44 @@ describe("Nach dem Match", () => {
     expect(applyMatchResult(p, "flitzer", "draw").epTotal).toBe(15);
     expect(applyMatchResult(p, "flitzer", "loss").epTotal).toBe(17);
     expect(epOf(p, "schuetze")).toBe(0);
+  });
+});
+
+describe("Medaillen", () => {
+  it("Gold ohne Gegentreffer, Silber ab zwei Punkten Vorsprung, sonst Bronze", () => {
+    expect(medalFor(3, 0)).toBe("gold");
+    expect(medalFor(1, 0)).toBe("gold");
+    expect(medalFor(3, 1)).toBe("silber");
+    expect(medalFor(4, 2)).toBe("silber");
+    expect(medalFor(3, 2)).toBe("bronze");
+    expect(medalFor(1, 0 + 1)).toBe("bronze");
+  });
+
+  it("jeder Sieg gibt genau eine Medaille, Unentschieden und Niederlage keine", () => {
+    const p = fresh();
+    expect(applyMatchResult(p, "brecher", "win", [3, 0]).medal).toBe("gold");
+    expect(applyMatchResult(p, "brecher", "win", [3, 1]).medal).toBe("silber");
+    expect(applyMatchResult(p, "brecher", "win", [3, 2]).medal).toBe("bronze");
+    expect(applyMatchResult(p, "brecher", "draw", [2, 2]).medal).toBeNull();
+    expect(applyMatchResult(p, "brecher", "loss", [1, 3]).medal).toBeNull();
+    expect(p.medaillen).toEqual({ gold: 1, silber: 1, bronze: 1 });
+    expect(medalTotal(p)).toBe(3);
+  });
+
+  it("Medaillen gehen nie verloren und überstehen das Speichern", () => {
+    const store = memoryStore();
+    const p = loadProgress(store);
+    applyMatchResult(p, "brecher", "win", [3, 0]);
+    applyMatchResult(p, "brecher", "win", [3, 0]);
+    for (let i = 0; i < 5; i++) applyMatchResult(p, "brecher", "loss", [0, 3]);
+    expect(p.medaillen.gold).toBe(2);
+    saveProgress(store, p);
+    expect(loadProgress(store).medaillen).toEqual({ gold: 2, silber: 0, bronze: 0 });
+  });
+
+  it("ein leerer Spielstand startet ohne Medaillen", () => {
+    expect(fresh().medaillen).toEqual({ gold: 0, silber: 0, bronze: 0 });
+    expect(medalTotal(fresh())).toBe(0);
   });
 });
 
@@ -104,6 +142,7 @@ describe("Speicherung", () => {
     const store = memoryStore();
     const p = loadProgress(store);
     setPlayerName(p, "Testi"); p.taler = 12; p.chosen = "flitzer"; p.tutDone = true; p.stufen.flitzer = 2;
+    p.medaillen.silber = 3;
     saveProgress(store, p);
     expect(loadProgress(store)).toEqual(p);
   });

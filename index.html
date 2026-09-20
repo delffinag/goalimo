@@ -44,6 +44,7 @@
 
   <div id="lobby" class="overlay lobby" hidden>
     <div class="topPill namePill"><b id="pName"></b></div>
+    <div class="topPill medalPill" id="medalPill" aria-label="Gewonnene Medaillen"></div>
     <div class="topPill curPill">
       <span class="taler" aria-hidden="true"></span><b id="talerCount" aria-label="Taler">0</b>
       <span class="training" aria-hidden="true">T</span><b id="trainingCount" aria-label="Trainingspunkte">0</b>
@@ -96,6 +97,7 @@
     <div class="panel">
       <h1 class="display" id="endTitle">Sieg!</h1>
       <div id="endScore"></div>
+      <div class="endMedal" id="endMedal" hidden></div>
       <p class="endInfo" id="endInfo"></p>
       <div class="endReward" id="endReward" hidden></div>
       <div><button class="big" id="endPraemie" hidden>Prämie wählen</button></div>

@@ -1,6 +1,6 @@
 import {
-  ERFAHRUNG, LOSS_KRISTALLE, MAX_STUFE, NAME_MAX, NAME_MIN, PRAEMIE_ANGEBOTE, REWARDS, TRAINING_COST,
-  type CosmeticReward, type PraemieKind
+  ERFAHRUNG, LOSS_KRISTALLE, MAX_STUFE, MEDAL_KINDS, NAME_MAX, NAME_MIN, PRAEMIE_ANGEBOTE, REWARDS,
+  SILBER_VORSPRUNG, TRAINING_COST, type CosmeticReward, type MedalKind, type PraemieKind
 } from "../data/balance";
 import { clampStufe, DEFAULT_FIGURE, FIGURES } from "../data/figures";
 import { DEFAULT_MODE, MODES } from "../data/modes";
@@ -10,7 +10,8 @@ import type { Store } from "./storage";
 const K = {
   player: "gl-name", kristalle: "gl-kristalle", taler: "gl-taler", training: "gl-training",
   siegpraemien: "gl-siegpraemien", stufen: "gl-trainingsstufen", erfahrung: "gl-erfahrung",
-  unlocked: "gl-belohnungen", chosen: "gl-figur", modus: "gl-modus", tut: "gl-uebung", migriert: "gl-migriert"
+  unlocked: "gl-belohnungen", medaillen: "gl-medaillen", chosen: "gl-figur", modus: "gl-modus",
+  tut: "gl-uebung", migriert: "gl-migriert"
 };
 
 /**
@@ -32,6 +33,8 @@ export interface Progress {
   /** Erfahrung (EP) je Figur, steigt nur */
   erfahrung: Record<string, number>;
   unlocked: Set<string>;
+  /** Gewonnene Medaillen je Art. Steigt nur. */
+  medaillen: Record<MedalKind, number>;
   chosen: string;
   /** Gewählter Spielmodus (Schlüssel aus data/modes.ts) */
   modus: string;
@@ -46,8 +49,18 @@ export interface MatchSummary {
   praemieWon: boolean;
   kristalleLost: number;
   figure: string; epPlus: number; epTotal: number;
+  /** Medaille für diesen Sieg, bei Unentschieden und Niederlage `null` */
+  medal: MedalKind | null;
   fresh: CosmeticReward[];
 }
+
+/** Gold für einen Sieg ohne Gegentreffer, Silber ab zwei Punkten Vorsprung, sonst Bronze */
+export function medalFor(own: number, other: number): MedalKind {
+  if (other === 0) return "gold";
+  return own - other >= SILBER_VORSPRUNG ? "silber" : "bronze";
+}
+
+const noMedals = (): Record<MedalKind, number> => ({ gold: 0, silber: 0, bronze: 0 });
 
 const int = (s: string | null) => Math.max(0, parseInt(s || "0", 10) || 0);
 function json<T>(s: string | null, fallback: T): T {
@@ -80,6 +93,7 @@ export function loadProgress(store: Store): Progress {
     siegpraemien: int(store.get(K.siegpraemien)),
     stufen: json(store.get(K.stufen), {}), erfahrung: json(store.get(K.erfahrung), {}),
     unlocked: new Set(json<string[]>(store.get(K.unlocked), [])),
+    medaillen: { ...noMedals(), ...json<Partial<Record<MedalKind, number>>>(store.get(K.medaillen), {}) },
     chosen: chosen && FIGURES[chosen] ? chosen : DEFAULT_FIGURE,
     modus: modus && MODES[modus] ? modus : DEFAULT_MODE,
     tutDone: store.get(K.tut) === "1"
@@ -93,7 +107,7 @@ export function saveProgress(store: Store, p: Progress): void {
   store.set(K.taler, String(p.taler)); store.set(K.training, String(p.training));
   store.set(K.kristalle, String(p.kristalle)); store.set(K.siegpraemien, String(p.siegpraemien));
   store.set(K.stufen, JSON.stringify(p.stufen)); store.set(K.erfahrung, JSON.stringify(p.erfahrung));
-  store.set(K.unlocked, JSON.stringify([...p.unlocked]));
+  store.set(K.unlocked, JSON.stringify([...p.unlocked])); store.set(K.medaillen, JSON.stringify(p.medaillen));
   store.set(K.chosen, p.chosen); store.set(K.modus, p.modus);
   if (p.tutDone) store.set(K.tut, "1");
 }
@@ -126,20 +140,30 @@ export function trainieren(p: Progress, key: string): boolean {
 }
 
 /**
- * Nur ein Sieg gibt eine Siegprämie. Unentschieden gibt nichts, eine Niederlage kostet 3 Kristalle (nie unter 0).
+ * Nur ein Sieg gibt eine Siegprämie und eine Medaille. Unentschieden gibt nichts,
+ * eine Niederlage kostet 3 Kristalle (nie unter 0).
  * Erfahrung steigt immer: Sieg +10, Unentschieden +5, Niederlage +2.
  */
-export function applyMatchResult(p: Progress, figure: string, result: MatchResult): MatchSummary {
-  if (result === "win") p.siegpraemien++;
+export function applyMatchResult(p: Progress, figure: string, result: MatchResult,
+  score: readonly [number, number] = [0, 0]): MatchSummary {
+  let medal: MedalKind | null = null;
+  if (result === "win") {
+    p.siegpraemien++;
+    medal = medalFor(score[0], score[1]);
+    p.medaillen[medal]++;
+  }
   const before = epOf(p, figure);
   p.erfahrung[figure] = before + ERFAHRUNG[result];
   const kristalleBefore = p.kristalle;
   if (result === "loss") p.kristalle = Math.max(0, p.kristalle + LOSS_KRISTALLE);
   return {
     result, praemieWon: result === "win", kristalleLost: kristalleBefore - p.kristalle,
-    figure, epPlus: ERFAHRUNG[result], epTotal: p.erfahrung[figure], fresh: unlockRewards(p)
+    figure, epPlus: ERFAHRUNG[result], epTotal: p.erfahrung[figure], medal, fresh: unlockRewards(p)
   };
 }
+
+/** Alle Medaillen zusammen */
+export const medalTotal = (p: Progress) => MEDAL_KINDS.reduce((n, k) => n + p.medaillen[k], 0);
 
 /** Die drei offenen Angebote einer Siegprämie: je eines pro Währung, Menge innerhalb der Spanne */
 export function praemieAngebote(random: () => number = Math.random): PraemieItem[] {

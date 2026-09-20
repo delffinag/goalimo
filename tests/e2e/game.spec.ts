@@ -139,6 +139,36 @@ test("Tor fällt und wird gemeldet, Sieg bei 3 Toren", async ({ page }) => {
   await expect(page.locator("#endTitle")).toHaveText("Sieg!");
   await expect(page.locator("#endScore")).toContainText("3 : 0");
   await expect(page.locator("#endInfo")).toHaveText("Du hast eine Siegprämie gewonnen! Rumpel: +10 EP (jetzt 10).");
+
+  // Ein Sieg ohne Gegentreffer gibt die Goldmedaille
+  const medal = page.locator("#endMedal");
+  await expect(medal).toBeVisible();
+  await expect(medal).toContainText("Goldmedaille");
+  await expect(medal).toContainText("Sieg ohne Gegentreffer");
+  await expect(medal.locator(".medaille.gold")).toBeVisible();
+});
+
+test("Medaille: knapper Sieg gibt Bronze, Unentschieden gibt keine", async ({ page }) => {
+  await start(page, PLAYER);
+  await page.locator("#lobbyPlay").click();
+  await waitForPhase(page, "match");
+  // Spielstand auf 2:2 setzen, das nächste Tor entscheidet knapp
+  await page.evaluate(() => { window.__game.world.score = [2, 2]; });
+  await scoreGoal(page);
+
+  await expect(page.locator("#end")).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("#endScore")).toContainText("3 : 2");
+  await expect(page.locator("#endMedal")).toContainText("Bronzemedaille");
+  await expect(page.locator("#endMedal .medaille.bronze")).toBeVisible();
+
+  await page.locator("#toMenu").click();
+  await expectLobby(page);
+  await expect(page.locator('#medalPill b[data-m="bronze"]')).toHaveText("1");
+  await expect(page.locator('#medalPill b[data-m="gold"]')).toHaveText("0");
+
+  // Medaillen bleiben nach dem Neuladen erhalten
+  await page.reload();
+  await expect(page.locator('#medalPill b[data-m="bronze"]')).toHaveText("1");
 });
 
 test("Siegprämie: drei offene Angebote, genau eines wird gebucht, danach ist der Knopf weg", async ({ page }) => {
@@ -171,6 +201,7 @@ test("Siegprämie: drei offene Angebote, genau eines wird gebucht, danach ist de
   await expect(praemie).toBeHidden();
   await page.locator("#toMenu").click();
   await expectLobby(page);
+  await expect(page.locator('#medalPill b[data-m="gold"]')).toHaveText("1");
   await expect(page.locator("#talerCount")).toHaveText(String(taler));
   await expect(page.locator("#trainingCount")).toHaveText("0");
   await expect(page.locator("#kristallCount")).toHaveText("0");
