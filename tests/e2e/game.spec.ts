@@ -304,6 +304,42 @@ test("Belohnungsweg: über die Medaille erreichbar, Stationen werden abgeholt", 
   await expect(page.locator("#pathHint")).toContainText("Noch 1 bis zur nächsten Station");
 });
 
+test("Eishockey: dritter Modus, Puck auf dem Eis mit weiterem Schuss", async ({ page }) => {
+  await start(page, PLAYER);
+  await expectLobby(page);
+  await expect(page.locator(".mbtn")).toHaveCount(3);
+
+  const eis = page.locator('.mbtn[data-m="eishockey"]');
+  await expect(eis).toContainText("Eishockey");
+  await eis.click();
+  await expect(eis).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await expect(page.locator('.mbtn[data-m="eishockey"]')).toHaveAttribute("aria-pressed", "true");
+
+  await page.locator("#lobbyPlay").click();
+  await waitForPhase(page, "match");
+  await expect(page.locator("#sf")).toHaveText("🏒 0");
+
+  // Auf dem Eis fliegt der Puck weiter als ein Ball auf Rasen (300 px)
+  const startX = await page.evaluate(() => {
+    const w = window.__game.world, p = w.player!;
+    for (const e of w.ents) if (e !== p) { e.x = 300 + e.slot * 60; e.y = 1040; }
+    p.x = 600; p.y = 250; p.cool = 0; p.aim = 0;
+    Object.assign(w.ball, { carrier: p, last: p, passer: null, x: p.x, y: p.y, vx: 0, vy: 0 });
+    return w.ball.x;
+  });
+  // Tippen zielt automatisch aufs gegnerische Tor, also nach rechts
+  await tapStage(page, 0.75, 0.5);
+  await page.waitForTimeout(4000);
+  const weite = await page.evaluate(() => window.__game.world.ball.x) - startX;
+  expect(weite).toBeGreaterThan(400);
+
+  // Ein Treffer zählt wie im Fußball
+  await scoreGoal(page);
+  await expect(page.locator("#banner")).toHaveText("Testi scored a goal");
+  await expect(page.locator("#sf")).toHaveText("🏒 1");
+});
+
 test("Rugby: unten links wählbar, Punkt nur durch Tragen über die Linie", async ({ page }) => {
   await start(page, PLAYER);
   await expectLobby(page);

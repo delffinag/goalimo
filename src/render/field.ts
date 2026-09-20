@@ -1,7 +1,7 @@
 import { H, W } from "../data/balance";
 import { GOALS, TRY_ZONES } from "../data/maps";
 import { mulberry32, rnd } from "../sim/math";
-import type { ScoreBy } from "../data/modes";
+import type { GameMode } from "../data/modes";
 import type { LoadedMap, World } from "../sim/world";
 import { circle, roundRect, type Ctx } from "./draw";
 
@@ -52,15 +52,35 @@ function drawTryZones(ctx: Ctx): void {
   });
 }
 
-/** Rasen mit Streifen à 100 px, Linien und – je nach Modus – Tore oder Malfelder */
-export function drawFloor(ctx: Ctx, scoreBy: ScoreBy): void {
+/** Rasen mit Streifen à 100 px, Mittellinie und Anstoßkreis */
+function drawGrass(ctx: Ctx): void {
   ctx.fillStyle = "#7fbf66"; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = "#74b45b";
   for (let x = 100; x < W; x += 200) ctx.fillRect(x, 0, 100, H);
   ctx.strokeStyle = "rgba(255,255,255,.65)"; ctx.lineWidth = 6; ctx.strokeRect(3, 3, W - 6, H - 6);
   ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
   circle(ctx, W / 2, H / 2, 110); ctx.stroke();
-  if (scoreBy === "carry") drawTryZones(ctx); else drawGoals(ctx);
+}
+
+/** Eisfläche mit Bande, zwei blauen Linien und rotem Mittelkreis */
+function drawIce(ctx: Ctx): void {
+  ctx.fillStyle = "#e9f3fb"; ctx.fillRect(0, 0, W, H);
+  // Schlieren vom Schlittschuh, in der Breite der Rasenstreifen
+  ctx.fillStyle = "#dfedf9";
+  for (let x = 100; x < W; x += 200) ctx.fillRect(x, 0, 100, H);
+  ctx.strokeStyle = "#3f6fd0"; ctx.lineWidth = 10;
+  for (const x of [W / 3, (W * 2) / 3]) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  ctx.strokeStyle = "#d94f4f"; ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
+  ctx.lineWidth = 5; circle(ctx, W / 2, H / 2, 110); ctx.stroke();
+  // Bande zum Schluss, damit sie über den Linien liegt
+  ctx.strokeStyle = "rgba(52,80,110,.6)"; ctx.lineWidth = 10; ctx.strokeRect(5, 5, W - 10, H - 10);
+}
+
+/** Spielfeld je nach Modus: Rasen oder Eis, dazu Tore oder Malfelder */
+export function drawFloor(ctx: Ctx, mode: GameMode): void {
+  if (mode.field === "eis") drawIce(ctx); else drawGrass(ctx);
+  if (mode.scoreBy === "carry") drawTryZones(ctx); else drawGoals(ctx);
 }
 
 export function drawWalls(ctx: Ctx, map: LoadedMap): void {
@@ -72,21 +92,35 @@ export function drawWalls(ctx: Ctx, map: LoadedMap): void {
   }
 }
 
-/** Der Busch, in dem der Spieler steht, wird durchsichtig */
+/** Deckung: auf Rasen ein Busch, auf dem Eis eine Schneewehe. Wer darin steht, wird schlechter gesehen. */
 export function drawBushes(ctx: Ctx, w: World): void {
   const pb = w.player && w.player.alive ? w.player.bush : -1;
+  const ice = w.mode.field === "eis";
+  const base = ice ? "#cfe3f2" : "#2f7a3e", top = ice ? "#f2faff" : "#45a257";
   bushBlobs(w.map).forEach((blobs, i) => {
     ctx.globalAlpha = i === pb ? 0.5 : 0.96;
-    for (const b of blobs) { circle(ctx, b.x, b.y, b.r); ctx.fillStyle = "#2f7a3e"; ctx.fill(); }
-    for (const b of blobs) { circle(ctx, b.x - 5, b.y - 6, b.r * 0.55); ctx.fillStyle = "#45a257"; ctx.fill(); }
+    for (const b of blobs) { circle(ctx, b.x, b.y, b.r); ctx.fillStyle = base; ctx.fill(); }
+    for (const b of blobs) { circle(ctx, b.x - 5, b.y - 6, b.r * 0.55); ctx.fillStyle = top; ctx.fill(); }
   });
   ctx.globalAlpha = 1;
 }
 
+/** Ball auf Rasen, Puck auf dem Eis */
 export function drawBall(ctx: Ctx, w: World): void {
   if (!(w.phase === "match" || w.phase === "countdown" || w.phase === "ending")) return;
   const B = w.ball;
   ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.beginPath(); ctx.ellipse(B.x, B.y + 13, 14, 6, 0, 0, Math.PI * 2); ctx.fill();
+  if (w.mode.field === "eis") {
+    // Flache schwarze Scheibe, leicht gestaucht, damit sie flach auf dem Eis liegt
+    ctx.beginPath(); ctx.ellipse(B.x, B.y + 3, B.r, B.r * 0.78, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#15171c"; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(B.x, B.y, B.r, B.r * 0.78, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#2b2f38"; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = "#0b0d10"; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(B.x - 4, B.y - 4, B.r * 0.42, B.r * 0.26, -0.4, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,.22)"; ctx.fill();
+    return;
+  }
   circle(ctx, B.x, B.y, B.r); ctx.fillStyle = "#ffffff"; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#2d2d33"; ctx.stroke();
   ctx.fillStyle = "#2d2d33"; circle(ctx, B.x, B.y, 5); ctx.fill();
   for (let k = 0; k < 5; k++) {

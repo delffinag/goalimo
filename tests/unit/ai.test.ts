@@ -12,7 +12,7 @@ import { createWorld, type PlayerSetup, type SimEvent } from "../../src/sim/worl
 const setup: PlayerSetup = { figure: "flitzer", name: "Testi", stufe: 1, cosmetics: { krone: false, gold: false, spur: false } };
 
 describe("Bots", () => {
-  it.each(["fussball", "rugby"])("spielen ein ganzes %s-Match zu Ende, ohne dass Werte kaputtgehen", modus => {
+  it.each(["fussball", "rugby", "eishockey"])("spielen ein ganzes %s-Match zu Ende, ohne dass Werte kaputtgehen", modus => {
     for (const seed of [1, 2, 3]) {
       const w = createWorld(FIELD, seed, { mode: MODES[modus] });
       startMatch(w, setup);

@@ -152,6 +152,51 @@ describe("Tore und Spielende", () => {
   });
 });
 
+describe("Eishockey", () => {
+  const eis = () => liveMatch(1, { mode: MODES.eishockey });
+
+  it("der Puck gleitet deutlich weiter als ein Ball auf Rasen", () => {
+    const strecke = (w: World) => {
+      giveBall(w, 600, 250);
+      expect(tryAttack(w, w.player!, 0, 1)).toBe(true);
+      const x0 = w.ball.x;
+      run(w, 6);
+      return w.ball.x - x0;
+    };
+    const rasen = strecke(liveMatch());
+    const eisStrecke = strecke(eis());
+    expect(rasen).toBeGreaterThan(285);
+    expect(rasen).toBeLessThan(315);
+    // 1,8-fache Schussweite auf dem Eis
+    expect(eisStrecke / rasen).toBeGreaterThan(1.7);
+    expect(eisStrecke / rasen).toBeLessThan(1.9);
+  });
+
+  it("und er bleibt länger in Bewegung", () => {
+    const rollt = (w: World) => {
+      giveBall(w, 600, 250);
+      tryAttack(w, w.player!, 0, 1);
+      let t = 0;
+      for (; t < 8; t += STEP) {
+        run(w, STEP);
+        if (Math.hypot(w.ball.vx, w.ball.vy) < 20 || w.ball.carrier) break;
+      }
+      return t;
+    };
+    expect(rollt(eis())).toBeGreaterThan(rollt(liveMatch()) * 1.5);
+  });
+
+  it("ein Treffer zählt wie im Fußball: der Puck muss ins Tor", () => {
+    const w = eis();
+    expect(w.mode.scoreBy).toBe("kick");
+    giveBall(w, W - 200, 550);
+    tryAttack(w, w.player!, 0, 1);
+    const events = run(w, 2);
+    expect(events).toContainEqual({ type: "goal", team: 0, msg: "Testi scored a goal" });
+    expect(w.score).toEqual([1, 0]);
+  });
+});
+
 describe("Pass", () => {
   it("ein gelungener Pass lädt den Super des Passgebers um 25 %", () => {
     const w = liveMatch();

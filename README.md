@@ -33,12 +33,13 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 
 ## Spielregeln (Kurzfassung)
 
-3 gegen 3, zwei Modi, in der Lobby unten links wählbar:
+3 gegen 3, drei Modi, in der Lobby unten links wählbar:
 
-| Modus | Punkt | Sieg |
-| --- | --- | --- |
-| **Fußball** | Der Ball muss ins gegnerische Tor. | 3 Tore |
-| **Rugby** | Eine Figur muss den Ball selbst über die gegnerische Linie tragen – geschossen zählt nicht. | 3 Versuche |
+| Modus | Punkt | Besonderheit | Sieg |
+| --- | --- | --- | --- |
+| **Fußball** | Der Ball muss ins gegnerische Tor. | – | 3 Tore |
+| **Rugby** | Eine Figur muss den Ball selbst über die gegnerische Linie tragen – geschossen zählt nicht. | Malfeld über die volle Feldhöhe | 3 Versuche |
+| **Eishockey** | Der Puck muss ins gegnerische Tor. | Der Puck bremst kaum und fliegt 1,8-mal so weit | 3 Treffer |
 
 - Spielzeit **3:00**.
 - Gleichstand nach Ablauf: **Golden Goal**, höchstens 60 s. Fällt kein Punkt, endet das Spiel unentschieden.

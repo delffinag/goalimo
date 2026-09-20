@@ -1,7 +1,8 @@
 import {
-  ATTACK_COOLDOWN, BALL_FRICTION, CARRY_SPEED, H, KICK_DIST, LOB_TIME, PICKUP_COOLDOWN, PROJ_SPEED, RESPAWN_TIME,
-  SHIELD_FACTOR, SUPER_KICK_DIST, TURBO_FACTOR, W
+  ATTACK_COOLDOWN, CARRY_SPEED, H, LOB_TIME, PICKUP_COOLDOWN, PROJ_SPEED, RESPAWN_TIME,
+  SHIELD_FACTOR, TURBO_FACTOR, W
 } from "../data/balance";
+import { kickDist, superKickDist } from "../data/modes";
 import { teamColor } from "../data/colors";
 import { targetCenter } from "../data/maps";
 import { collide, visibleTo } from "./geometry";
@@ -71,7 +72,7 @@ export function kick(w: World, b: Kicker, ang: number, pw: number): void {
 export function tryAttack(w: World, b: Kicker, ang: number, d01: number): boolean {
   if (w.ball.carrier === b) {
     if (!b.alive || b.cool > 0) return false;
-    kick(w, b, ang, KICK_DIST * BALL_FRICTION); b.cool = ATTACK_COOLDOWN; return true;
+    kick(w, b, ang, kickDist(w.mode) * w.mode.friction); b.cool = ATTACK_COOLDOWN; return true;
   }
   if (!b.alive || b.ammo < 1 || b.cool > 0) return false;
   b.ammo -= 1; b.cool = ATTACK_COOLDOWN; fire(w, b, ang, d01, false); return true;
@@ -81,7 +82,7 @@ export function tryAttack(w: World, b: Kicker, ang: number, d01: number): boolea
 export function trySuper(w: World, b: Kicker, ang: number, d01: number): boolean {
   if (!b.alive || b.superC < 1) return false;
   b.superC = 0;
-  if (w.ball.carrier === b) { kick(w, b, ang, SUPER_KICK_DIST * BALL_FRICTION); w.ball.superT = 0.6; }
+  if (w.ball.carrier === b) { kick(w, b, ang, superKickDist(w.mode) * w.mode.friction); w.ball.superT = 0.6; }
   else fire(w, b, ang, d01, true);
   w.fx.push(ring(b.x, b.y, 20, 60, 0.3, "#ffc83d"));
   return true;

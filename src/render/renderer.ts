@@ -1,4 +1,5 @@
-import { H, KICK_DIST, SUPER_KICK_DIST, W } from "../data/balance";
+import { H, W } from "../data/balance";
+import { kickDist, superKickDist } from "../data/modes";
 import { FIRE, ICE } from "../data/colors";
 import { STICK_R, TAP_DIST, type Input } from "../input/input";
 import { visibleTo } from "../sim/geometry";
@@ -30,7 +31,7 @@ function drawAimGuide(ctx: Ctx, w: World, input: Input): void {
   const col = isSup && player.superC >= 1 ? "255,200,61" : "255,255,255";
   ctx.fillStyle = `rgba(${col},.3)`; ctx.strokeStyle = `rgba(${col},.8)`; ctx.lineWidth = 2;
   if (w.ball.carrier === player) {
-    const d = isSup ? SUPER_KICK_DIST : KICK_DIST;
+    const d = isSup ? superKickDist(w.mode) : kickDist(w.mode);
     ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(ang); ctx.setLineDash([12, 8]);
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(d, 0); ctx.lineWidth = 6; ctx.stroke(); ctx.setLineDash([]); ctx.restore();
     circle(ctx, player.x + Math.cos(ang) * d, player.y + Math.sin(ang) * d, 14); ctx.fill(); ctx.stroke();
@@ -84,10 +85,10 @@ export function createRenderer(canvas: HTMLCanvasElement, stage: Stage): Rendere
     render(w, input) {
       updateCamera(w);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.fillStyle = "#2a382f"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = w.mode.field === "eis" ? "#233040" : "#2a382f"; ctx.fillRect(0, 0, canvas.width, canvas.height);
       const k = stage.dpr * stage.scale;
       ctx.setTransform(k, 0, 0, k, -camX * k, -camY * k);
-      drawFloor(ctx, w.mode.scoreBy);
+      drawFloor(ctx, w.mode);
       // Zielkreise für Bomben: gegnerische immer, eigene nur vom Spieler
       for (const l of w.lobs) if (l.team === 1 || l.owner === w.player) {
         circle(ctx, l.x1, l.y1, l.radius); ctx.fillStyle = l.team ? "rgba(63,184,240,.18)" : "rgba(255,122,47,.18)"; ctx.fill();

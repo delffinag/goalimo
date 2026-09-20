@@ -1,6 +1,5 @@
-import {
-  BALL_FRICTION, FOE_EXTRA_SHOOT_DELAY, H, KICK_DIST, LOB_TIME, PROJ_SPEED, SUPER_KICK_DIST, W
-} from "../data/balance";
+import { FOE_EXTRA_SHOOT_DELAY, H, LOB_TIME, PROJ_SPEED, W } from "../data/balance";
+import { kickDist, superKickDist } from "../data/modes";
 import { LANES, targetCenter } from "../data/maps";
 import type { Point } from "../data/types";
 import { kick, moveEnt, tryAttack, trySuper } from "../sim/combat";
@@ -39,12 +38,12 @@ function holdPoint(b: Kicker): Point {
 
 /** Passen, wenn der Bot bedrängt wird und ein Mitspieler freier und näher am Ziel steht */
 function tryPass(w: World, b: Kicker, goalDist: number, foes: Kicker[]): boolean {
-  const eg = targetCenter(w.mode.scoreBy, b.team);
+  const eg = targetCenter(w.mode.scoreBy, b.team), reach = kickDist(w.mode);
   let best: Kicker | null = null, bs = 0;
   for (const m of w.ents) {
     if (m === b || !m.alive || m.team !== b.team) continue;
     const dm = hyp(m.x - b.x, m.y - b.y);
-    if (dm < 90 || dm > KICK_DIST + 40 || !losWide(w.map, b, m, 10)) continue;
+    if (dm < 90 || dm > reach + 40 || !losWide(w.map, b, m, 10)) continue;
     const ahead = goalDist - hyp(eg.x - m.x, eg.y - m.y);
     const free = foes.length ? Math.min(...foes.map(e => hyp(e.x - m.x, e.y - m.y))) : 400;
     const sc = ahead + Math.min(free, 300) * 0.6 - 40;
@@ -53,7 +52,7 @@ function tryPass(w: World, b: Kicker, goalDist: number, foes: Kicker[]): boolean
   if (!best) return false;
   const lead = 0.35, tx = best.x + best.vx * lead, ty = best.y + best.vy * lead;
   const pa = Math.atan2(ty - b.y, tx - b.x), pd = hyp(tx - b.x, ty - b.y);
-  kick(w, b, pa + rnd(w.rng, -0.05, 0.05), Math.min(KICK_DIST, pd + 40) * BALL_FRICTION);
+  kick(w, b, pa + rnd(w.rng, -0.05, 0.05), Math.min(reach, pd + 40) * w.mode.friction);
   b.cool = 0.3;
   return true;
 }
@@ -71,12 +70,13 @@ function ballBrain(w: World, b: Kicker, tgt: Kicker | null, bd: number, canHit: 
     b.ai.passWait -= dt;
     const foes = w.ents.filter(e => e.alive && e.team !== b.team);
     const pressed = foes.some(e => hyp(e.x - b.x, e.y - b.y) < 260);
-    if ((pressed || w.rng() < 0.012) && b.ai.passWait <= 0 && b.cool <= 0 && d > KICK_DIST - 20 && tryPass(w, b, d, foes))
+    const reach = kickDist(w.mode), superReach = superKickDist(w.mode);
+    if ((pressed || w.rng() < 0.012) && b.ai.passWait <= 0 && b.cool <= 0 && d > reach - 20 && tryPass(w, b, d, foes))
       return { carry: true };
     // Im Rugby zählt nur das Tragen: der Ballträger schießt nie aufs Ziel, er läuft und passt
     if (w.mode.scoreBy === "carry") return { carry: true };
-    if (d < SUPER_KICK_DIST - 20 && d > KICK_DIST - 20 && b.superC >= 1 && los(w.map, b, eg)) trySuper(w, b, ang + rnd(w.rng, -0.05, 0.05), 1);
-    else if (d < KICK_DIST - 20 && los(w.map, b, eg)) tryAttack(w, b, ang + rnd(w.rng, -0.08, 0.08), 1);
+    if (d < superReach - 20 && d > reach - 20 && b.superC >= 1 && los(w.map, b, eg)) trySuper(w, b, ang + rnd(w.rng, -0.05, 0.05), 1);
+    else if (d < reach - 20 && los(w.map, b, eg)) tryAttack(w, b, ang + rnd(w.rng, -0.08, 0.08), 1);
     return { carry: true };
   }
   if (!B.carrier) {

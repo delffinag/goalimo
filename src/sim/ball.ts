@@ -1,4 +1,4 @@
-import { BALL_FRICTION, COUNTDOWN_AFTER_GOAL, H, PASS_SUPER_BONUS, W } from "../data/balance";
+import { COUNTDOWN_AFTER_GOAL, H, PASS_SUPER_BONUS, W } from "../data/balance";
 import { GOALS, TRY_ZONES } from "../data/maps";
 import { ring } from "./combat";
 import { inRect } from "./geometry";
@@ -18,7 +18,7 @@ export function updateBall(w: World, dt: number): void {
   if (!B.carrier) {
     B.x += B.vx * dt; B.y += B.vy * dt;
     if (B.superT > 0) { B.superT -= dt; w.fx.push(ring(B.x, B.y, 14, 4, 0.35, "#ffc83d")); }
-    const f = Math.exp(-BALL_FRICTION * dt); B.vx *= f; B.vy *= f;
+    const f = Math.exp(-w.mode.friction * dt); B.vx *= f; B.vy *= f;
     for (const wl of w.map.walls) {
       const cx = clamp(B.x, wl.x, wl.x + wl.w), cy = clamp(B.y, wl.y, wl.y + wl.h), dx = B.x - cx, dy = B.y - cy, d = hyp(dx, dy);
       if (d < B.r) {

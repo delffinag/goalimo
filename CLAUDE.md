@@ -28,10 +28,13 @@ den Code aber sauber in Module aufteilen.
 - Speicherung im MVP: localStorage. Später optional Supabase (Free Tier) für Konten, damit Name und Fortschritt geräteübergreifend gelten.
 
 ## Fachliche Regeln (Stand Prototyp)
-- Zwei Modi, in der Lobby unten links wählbar (`src/data/modes.ts`), Spielzeit und Verlängerung gelten für beide:
+- Drei Modi, in der Lobby unten links wählbar (`src/data/modes.ts`), Spielzeit und Verlängerung gelten für alle:
   - **Fußball**: Sieg bei 3 Toren. Der Ball muss ins gegnerische Tor, egal wer ihn dorthin gebracht hat.
   - **Rugby**: Sieg bei 3 Versuchen. Eine Figur muss den Ball selbst über die gegnerische Linie tragen; ein
     geschossener Ball im Malfeld zählt nicht. Das Malfeld geht über die volle Feldhöhe (`TRY_ZONES` in `data/maps.ts`).
+  - **Eishockey**: Sieg bei 3 Treffern, gezählt wird wie im Fußball. Der Unterschied liegt in der Physik: Der Puck
+    bremst kaum (`ICE_FRICTION`) und fliegt 1,8-mal so weit (`ICE_KICK_FACTOR`). Eisfläche statt Rasen, Puck statt
+    Ball, Schneewehen statt Büsche – gesteuert über `mode.field`.
 - Spielzeit 3:00. Bei Gleichstand nach Ablauf: Golden Goal (max. 60 s), danach Unentschieden.
 - Gelungener Pass zu einem Mitspieler lädt den Super des Passgebers um 25 %.
 - Normaler Schuss mit Ball: ca. 300 px (3 Rasenstreifen à 100 px). Super-Schuss: ca. 500 px. Ballreibung exp(-3·t).

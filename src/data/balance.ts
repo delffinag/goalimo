@@ -23,6 +23,9 @@ export const BALL_RADIUS = 16;
 export const BALL_FRICTION = 3;
 export const KICK_DIST = 300;
 export const SUPER_KICK_DIST = 500;
+/** Eishockey: der Puck bremst kaum und fliegt weiter als ein Ball auf Rasen */
+export const ICE_FRICTION = 1.2;
+export const ICE_KICK_FACTOR = 1.8;
 export const CARRY_SPEED = 0.75;
 export const PICKUP_COOLDOWN = 0.6;
 /** Ein gelungener Pass lädt den Super des Passgebers um diesen Anteil */
