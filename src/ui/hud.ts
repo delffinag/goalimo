@@ -6,9 +6,9 @@ const TUT_TEXT = [
   "Tipp rechts: Du schießt automatisch auf die Zielscheibe.<small>Rechts ziehen und loslassen zielt selbst. Zu weit weg? Geh näher ran.</small>",
   "Versteck dich im Busch. Dort sehen dich Gegner erst aus der Nähe.",
   "Dein Super ist geladen. Drück den gelben Knopf.<small>Am Computer: Leertaste</small>",
-  "Stark. Jetzt Fußball: Lauf in den Ball, um ihn zu führen. Schießen kickt ihn. Wer zuerst 2 Tore schießt, gewinnt."
+  "Stark. Jetzt Fußball: Lauf in den Ball, um ihn zu führen. Schießen kickt ihn. Wer zuerst 3 Tore schießt, gewinnt."
 ];
-const MATCH_HINT = "Lauf in den Ball, um ihn zu führen. Schießen kickt ihn aufs Tor.<small>Wirst du ausgeschaltet, verlierst du den Ball.</small>";
+const MATCH_HINT = "Lauf in den Ball, um ihn zu führen. Schießen kickt ihn aufs Tor.<small>Ein Pass zu einem Mitspieler lädt deinen Super um 25 %. Wirst du ausgeschaltet, verlierst du den Ball.</small>";
 
 export interface Hud { update(w: World): void }
 
@@ -29,6 +29,8 @@ export function createHud(): Hud {
         sf.textContent = "⚽ " + w.score[0]; si.textContent = "⚽ " + w.score[1];
         const t = Math.ceil(w.timeLeft);
         timer.textContent = `${(t / 60) | 0}:${String(t % 60).padStart(2, "0")}`;
+        // Verlängerung: goldene Uhr, das nächste Tor entscheidet
+        timer.classList.toggle("golden", w.golden);
       }
       const hint = w.matchHint > 0 && (w.phase === "match" || w.phase === "countdown");
       tut.hidden = !(tutorial || hint);

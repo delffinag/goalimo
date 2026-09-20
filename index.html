@@ -8,19 +8,28 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fußball">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<title>Fußballspiel</title>
+<meta name="apple-mobile-web-app-title" content="Goalimo">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="preload" href="./fonts/fredoka-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="./fonts/nunito-800.woff2" as="font" type="font/woff2" crossorigin>
+<title>Goalimo</title>
+<!-- Schriften liegen im Spiel selbst (public/fonts/). Es wird nichts von fremden Servern geladen.
+     Lizenz: SIL Open Font License 1.1, Texte in licenses/ und im Build unter ./licenses/. -->
+<style>
+@font-face{ font-family:"Fredoka"; font-style:normal; font-weight:600; font-display:swap; src:url("./fonts/fredoka-600.woff2") format("woff2"); }
+@font-face{ font-family:"Nunito"; font-style:normal; font-weight:600; font-display:swap; src:url("./fonts/nunito-600.woff2") format("woff2"); }
+@font-face{ font-family:"Nunito"; font-style:normal; font-weight:800; font-display:swap; src:url("./fonts/nunito-800.woff2") format("woff2"); }
+</style>
 </head>
 <body>
 <div id="stage">
   <canvas id="c"></canvas>
 
-  <div id="hud" hidden><div class="pill" id="sf">0</div><div id="timer">2:30</div><div class="pill" id="si">0</div></div>
+  <div id="hud" hidden><div class="pill" id="sf">0</div><div id="timer">3:00</div><div class="pill" id="si">0</div></div>
   <div id="tut" hidden></div>
-  <button id="skip" hidden>Tutorial überspringen</button>
+  <button id="skip" hidden>Übungsrunde überspringen</button>
   <button id="superBtn" aria-label="Super auslösen" hidden><span>Super</span></button>
   <div id="banner"></div>
 
@@ -34,15 +43,19 @@
   </div>
 
   <div id="lobby" class="overlay lobby" hidden>
-    <div class="gemPill namePill"><b id="pName"></b></div>
-    <div class="gemPill curPill"><span class="coin" aria-hidden="true"></span><b id="coinCount" aria-label="Münzen">0</b><span class="pp" aria-hidden="true">⚡</span><b id="ppCount" aria-label="Powerpunkte">0</b><span class="gem" aria-hidden="true"></span><b id="gemCount" aria-label="Juwelen">0</b></div>
+    <div class="topPill namePill"><b id="pName"></b></div>
+    <div class="topPill curPill">
+      <span class="taler" aria-hidden="true"></span><b id="talerCount" aria-label="Taler">0</b>
+      <span class="training" aria-hidden="true">T</span><b id="trainingCount" aria-label="Trainingspunkte">0</b>
+      <span class="kristall" aria-hidden="true"></span><b id="kristallCount" aria-label="Kristalle">0</b>
+    </div>
     <button class="figBtn" id="lobbySetup"><span>Figuren</span></button>
     <div class="lcenter">
-      <h1 class="display">Fußballspiel</h1>
+      <h1 class="display">Goalimo</h1>
       <div class="linfo" id="lobbyInfo"></div>
-      <p class="sub">Fußball 3 gegen 3: Bring den Ball ins gegnerische Tor. Wer zuerst 2 Tore schießt, gewinnt.</p>
+      <p class="sub">Fußball 3 gegen 3: Bring den Ball ins gegnerische Tor. Wer zuerst 3 Tore schießt, gewinnt.</p>
       <button class="big" id="lobbyPlay">Spielen</button>
-      <button class="ghost" id="lobbyBox" hidden>Box öffnen</button>
+      <button class="ghost" id="lobbyPraemie" hidden>Prämie wählen</button>
     </div>
   </div>
 
@@ -59,19 +72,19 @@
         <div class="ab" id="detAtk"></div>
         <div class="ab" id="detSup"></div>
         <div id="detStats"></div>
-        <div class="upg"><span id="detLvl"></span><button class="ghost" id="detUp"></button></div>
+        <div class="upg"><span id="detStufe"></span><button class="ghost" id="detTrain"></button></div>
         <div class="row"><button class="big" id="play">Spielen</button><button class="ghost" id="detPick">Auswählen</button><button class="ghost" id="detClose">Zurück</button></div>
       </div>
     </div>
   </div>
 
-  <div id="boxView" class="overlay" hidden>
-    <div class="panel boxPanel">
-      <h1 class="display">Deine Box</h1>
-      <button class="boxBtn" id="boxBtn" aria-label="Objekt aus der Box ziehen"><span class="box"></span></button>
-      <p class="sub" id="boxHint"></p>
-      <div class="loot" id="loot" aria-live="polite"></div>
-      <button class="big" id="boxDone" hidden>Fertig</button>
+  <div id="praemieView" class="overlay" hidden>
+    <div class="panel praemiePanel">
+      <h1 class="display">Siegprämie</h1>
+      <p class="sub" id="praemieHint">Drei Angebote, du wählst genau eines.</p>
+      <div class="offers" id="offers"></div>
+      <div class="loot" id="praemieResult" aria-live="polite"></div>
+      <button class="big" id="praemieDone" hidden>Fertig</button>
     </div>
   </div>
 
@@ -79,9 +92,9 @@
     <div class="panel">
       <h1 class="display" id="endTitle">Sieg!</h1>
       <div id="endScore"></div>
-      <p class="endGems" id="endGems"></p>
+      <p class="endInfo" id="endInfo"></p>
       <div class="endReward" id="endReward" hidden></div>
-      <div><button class="big" id="endBox" hidden>Box öffnen</button></div>
+      <div><button class="big" id="endPraemie" hidden>Prämie wählen</button></div>
       <button class="big" id="again">Nochmal</button>
       <button class="ghost" id="toMenu">Zur Lobby</button>
     </div>

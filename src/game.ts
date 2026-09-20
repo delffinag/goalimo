@@ -5,7 +5,7 @@ import { createInput } from "./input/input";
 import { createRenderer } from "./render/renderer";
 import { startMatch, startTutorial, toMenu } from "./sim/match";
 import { tick } from "./sim/tick";
-import { createWorld, type PlayerSetup, type SimEvent, type World } from "./sim/world";
+import { createWorld, type PlayerSetup, type SimEvent, type World, type WorldOptions } from "./sim/world";
 import { $ } from "./ui/dom";
 import { createHud } from "./ui/hud";
 import { createStage, type Stage } from "./ui/stage";
@@ -20,6 +20,17 @@ export interface Game {
   onEvent(handler: (e: SimEvent) => void): void;
 }
 
+/**
+ * Nur mit `?debug`: Spielzeit und Golden Goal lassen sich per Adresszeile verkürzen (`?debug&spielzeit=6&goldengoal=4`).
+ * Automatische Tests brauchen das, im normalen Spiel gelten die Werte aus `data/balance`.
+ */
+function testOptions(): WorldOptions {
+  const q = new URLSearchParams(location.search);
+  if (!q.has("debug")) return {};
+  const num = (key: string) => { const v = q.get(key); return v === null ? undefined : Math.max(0, Number(v) || 0); };
+  return { matchTime: num("spielzeit"), goldenTime: num("goldengoal") };
+}
+
 /** Verbindet Eingabe → Simulation → Darstellung. Die Simulation läuft im festen Takt, gezeichnet wird pro Bildschirm-Frame. */
 export function createGame(): Game {
   const canvas = $<HTMLCanvasElement>("c");
@@ -27,7 +38,7 @@ export function createGame(): Game {
   const renderer = createRenderer(canvas, stage);
   const input = createInput(canvas, $("superBtn"), stage, renderer.screenToWorld);
   const hud = createHud();
-  const world = createWorld(FIELD);
+  const world = createWorld(FIELD, Date.now(), testOptions());
   const handlers: ((e: SimEvent) => void)[] = [];
 
   let last = performance.now(), acc = 0;

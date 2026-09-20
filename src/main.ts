@@ -1,6 +1,4 @@
-import "@fontsource/lilita-one/latin-400.css";
-import "@fontsource/nunito/latin-600.css";
-import "@fontsource/nunito/latin-800.css";
+// Die Schriften liegen als woff2 in public/fonts/ und werden in index.html per @font-face eingebunden.
 import "./style.css";
 import { createGame } from "./game";
 import { initApp } from "./ui/app";

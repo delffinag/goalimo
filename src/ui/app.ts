@@ -1,14 +1,14 @@
 import type { Game } from "../game";
 import { loadProgress, playerSetup, saveProgress, type Progress } from "../meta/progress";
 import { localStore } from "../meta/storage";
-import { initBox } from "./box";
 import { $ } from "./dom";
 import { initEnd } from "./end";
 import { initFigures } from "./figures";
 import { initLobby } from "./lobby";
+import { initPraemie } from "./praemie";
 import { initWelcome } from "./welcome";
 
-export type Screen = "welcome" | "lobby" | "figures" | "box" | "end" | "match";
+export type Screen = "welcome" | "lobby" | "figures" | "praemie" | "end" | "match";
 
 /** Was jeder Screen braucht: Spiel, Fortschritt, Speichern und Navigation */
 export interface App {
@@ -17,10 +17,10 @@ export interface App {
   save(): void;
   show(screen: Screen): void;
   play(): void;
-  openBox(from: "lobby" | "end"): void;
+  openPraemie(from: "lobby" | "end"): void;
 }
 
-const OVERLAYS: Record<Exclude<Screen, "match">, string> = { welcome: "welcome", lobby: "lobby", figures: "menu", box: "boxView", end: "end" };
+const OVERLAYS: Record<Exclude<Screen, "match">, string> = { welcome: "welcome", lobby: "lobby", figures: "menu", praemie: "praemieView", end: "end" };
 
 function goFullscreen(): void {
   try {
@@ -46,13 +46,13 @@ export function initApp(game: Game): App {
       app.show("match");
       game.play(playerSetup(progress), !progress.tutDone);
     },
-    openBox: () => {}
+    openPraemie: () => {}
   };
 
   initWelcome(app);
   enter.lobby = initLobby(app);
   enter.figures = initFigures(app);
-  app.openBox = initBox(app);
+  app.openPraemie = initPraemie(app);
   const showEnd = initEnd(app);
 
   $("skip").addEventListener("click", () => game.skipTutorial());

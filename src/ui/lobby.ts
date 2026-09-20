@@ -1,19 +1,21 @@
 import { FIGURES } from "../data/figures";
 import type { App } from "./app";
-import { updateBoxButtons } from "./box";
 import { $ } from "./dom";
+import { updatePraemieButtons } from "./praemie";
 
-/** Lobby: Name oben links, Währungen oben rechts, „Figuren“ links, „Spielen“ in der Mitte */
+/** Lobby: Name oben links, Taler/Trainingspunkte/Kristalle oben rechts, „Figuren“ links, „Spielen“ in der Mitte */
 export function initLobby(app: App): () => void {
   $("lobbyPlay").addEventListener("click", () => app.play());
   $("lobbySetup").addEventListener("click", () => app.show("figures"));
-  $("lobbyBox").addEventListener("click", () => app.openBox("lobby"));
+  $("lobbyPraemie").addEventListener("click", () => app.openPraemie("lobby"));
 
   return function render() {
     const p = app.progress, T = FIGURES[p.chosen];
     $("pName").textContent = p.playerName;
-    $("coinCount").textContent = String(p.coins); $("ppCount").textContent = String(p.pp); $("gemCount").textContent = String(p.gems);
+    $("talerCount").textContent = String(p.taler);
+    $("trainingCount").textContent = String(p.training);
+    $("kristallCount").textContent = String(p.kristalle);
     $("lobbyInfo").textContent = `${T.name}, ${T.className}`;
-    updateBoxButtons(p);
+    updatePraemieButtons(p);
   };
 }

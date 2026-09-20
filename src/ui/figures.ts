@@ -1,6 +1,6 @@
-import { MAX_LEVEL } from "../data/balance";
+import { MAX_STUFE } from "../data/balance";
 import { descShot, descSup, FIGURE_KEYS, FIGURES, scaledType } from "../data/figures";
-import { canUpgrade, figGemsOf, levelOf, upgrade, upgradeCost } from "../meta/progress";
+import { canTrainieren, epOf, stufeOf, trainieren, trainingCost } from "../meta/progress";
 import { drawPortrait } from "../render/portrait";
 import type { App } from "./app";
 import { $ } from "./dom";
@@ -19,19 +19,32 @@ function ability(el: HTMLElement, label: string, text: string): void {
   el.replaceChildren(b, " " + text);
 }
 
-/** Figurenauswahl mit Kacheln und Detailansicht (Werte, Verbessern, Auswählen). Gibt die Funktion zum Betreten zurück. */
+/** Trainingsstufe als Sterne: gefüllte Sterne bis zur Stufe, der Rest bleibt leer */
+function stars(el: HTMLElement, stufe: number): void {
+  el.replaceChildren(...Array.from({ length: MAX_STUFE }, (_, i) => {
+    const s = document.createElement("i");
+    s.textContent = "★";
+    if (i < stufe) s.className = "on";
+    return s;
+  }));
+  el.setAttribute("aria-label", `Trainingsstufe ${stufe} von ${MAX_STUFE}`);
+}
+
+/** Figurenauswahl mit Karten und Detailansicht (Werte, Trainieren, Auswählen). Gibt die Funktion zum Betreten zurück. */
 export function initFigures(app: App): () => void {
   const cards = $("cards"), modal = $("figModal");
   const p = app.progress;
   let detailKey = p.chosen, dragged = false;
 
+  // Karte: helle Fläche, oben ein Farbband, rundes Medaillon mit Porträt, Name, Stärke als Pille, unten Sterne und EP
   for (const k of FIGURE_KEYS) {
     const T = FIGURES[k];
     const tile = document.createElement("button");
     tile.className = "tile"; tile.dataset.k = k;
     tile.style.setProperty("--c", T.look[1]);
-    tile.innerHTML = '<span class="tg"><span class="gem" aria-hidden="true"></span><b></b></span><canvas class="cv"></canvas>' +
-      '<span class="tbar"><span class="tlvl" title="Power-Level"></span><span class="tname"></span></span><span class="tstr"></span>';
+    tile.innerHTML = '<span class="tband" aria-hidden="true"></span><span class="tcheck" aria-hidden="true">✓</span>' +
+      '<span class="tmedal"><canvas class="cv"></canvas></span><span class="tname"></span><span class="tstr"></span>' +
+      '<span class="tfoot"><span class="tstars"></span><span class="tep"></span></span>';
     tile.querySelector(".tname")!.textContent = T.name;
     tile.querySelector(".tstr")!.textContent = T.strength;
     tile.addEventListener("click", () => { if (!dragged) openDetail(k); });
@@ -41,22 +54,26 @@ export function initFigures(app: App): () => void {
 
   function refreshTiles(): void {
     for (const tile of cards.children as HTMLCollectionOf<HTMLElement>) {
-      const k = tile.dataset.k!, lv = levelOf(p, k), gems = figGemsOf(p, k);
+      const k = tile.dataset.k!, stufe = stufeOf(p, k), ep = epOf(p, k);
       tile.setAttribute("aria-pressed", String(k === p.chosen));
-      tile.querySelector(".tlvl")!.textContent = String(lv);
-      tile.querySelector(".tg b")!.textContent = String(gems);
-      tile.setAttribute("aria-label", `${FIGURES[k].name}, Power-Level ${lv}, ${gems} Juwelen`);
+      stars(tile.querySelector<HTMLElement>(".tstars")!, stufe);
+      tile.querySelector(".tep")!.textContent = `${ep} EP`;
+      tile.setAttribute("aria-label", `${FIGURES[k].name}, Trainingsstufe ${stufe}, ${ep} EP`);
     }
   }
 
   function openDetail(k: string): void {
     detailKey = k;
-    const lv = levelOf(p, k), T = scaledType(k, lv);
+    const stufe = stufeOf(p, k), T = scaledType(k, stufe);
     $("detName").textContent = T.name;
-    $("detLvl").textContent = `Power-Level ${lv} von ${MAX_LEVEL}, ${figGemsOf(p, k)} Juwelen`;
-    const up = $<HTMLButtonElement>("detUp"), cost = upgradeCost(p, k);
-    up.textContent = cost ? `Verbessern: ${cost[0]} Münzen + ${cost[1]} Powerpunkte` : "Maximale Stufe";
-    up.disabled = !canUpgrade(p, k);
+    const info = $("detStufe");
+    const label = document.createElement("span"), st = document.createElement("span");
+    st.className = "stars"; stars(st, stufe);
+    label.textContent = `Trainingsstufe ${stufe} von ${MAX_STUFE}, ${epOf(p, k)} EP `;
+    info.replaceChildren(label, st);
+    const up = $<HTMLButtonElement>("detTrain"), cost = trainingCost(p, k);
+    up.textContent = cost ? `Trainieren: ${cost[0]} Taler + ${cost[1]} Trainingspunkte` : "Höchste Stufe";
+    up.disabled = !canTrainieren(p, k);
     $("detRole").textContent = `${T.className}. Stärke: ${T.strength}`;
     ability($("detAtk"), "Angriff:", descShot(T.shot));
     ability($("detSup"), "Super:", descSup(T.sup));
@@ -70,8 +87,8 @@ export function initFigures(app: App): () => void {
     refreshTiles();
   }
 
-  $("detUp").addEventListener("click", () => {
-    if (!upgrade(p, detailKey)) return;
+  $("detTrain").addEventListener("click", () => {
+    if (!trainieren(p, detailKey)) return;
     app.save();
     openDetail(detailKey); refreshTiles();
   });
@@ -100,7 +117,7 @@ export function initFigures(app: App): () => void {
   return function enter() {
     modal.hidden = true;
     refreshTiles();
-    // Porträts erst zeichnen, wenn die Kacheln sichtbar sind und eine Größe haben
+    // Porträts erst zeichnen, wenn die Karten sichtbar sind und eine Größe haben
     requestAnimationFrame(() => {
       for (const tile of cards.children) drawPortrait(tile.querySelector<HTMLCanvasElement>(".cv")!, (tile as HTMLElement).dataset.k!);
       const sel = cards.querySelector<HTMLElement>('[aria-pressed="true"]');

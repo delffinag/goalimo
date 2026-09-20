@@ -1,7 +1,9 @@
 :root{
   --bg:#1b2620; --scrim:rgba(20,30,25,.72); --panel:#fff6e6; --ink:#2b2119; --muted:#7a6b5c;
   --card:#f3e6cf; --line:#e0cfb2; --accent:#ffc83d; --fire:#ff7a2f; --ice:#3fb8f0;
-  --display:"Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --taler:#ffc83d; --training:#2fbf6a; --kristall:#7a4dff;
+  /* Schriften kommen aus public/fonts/ (@font-face in index.html), nie von einem fremden Server */
+  --display:"Fredoka", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --text:"Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
   box-sizing:border-box;
 }
@@ -18,15 +20,17 @@ html,body{ height:100%; margin:0; overflow:hidden; background:var(--bg); overscr
    und es gibt bewusst keine globale canvas-Regel (die hat früher alle Figurenbilder überdeckt). */
 #stage{ position:fixed; top:0; left:0; overflow:hidden; transform-origin:0 0; }
 #c{ position:absolute; top:0; left:0; width:100%; height:100%; touch-action:none; display:block; }
-.display{ font-family:var(--display); font-weight:400; letter-spacing:.01em; }
+.display{ font-family:var(--display); font-weight:600; letter-spacing:.01em; }
 
 /* ---------- Anzeigen im Match ---------- */
 #hud{ position:absolute; top:0; left:50%; transform:translateX(-50%); padding-top:calc(env(safe-area-inset-top,0px) + 8px);
   display:flex; align-items:center; gap:10px; pointer-events:none; }
-#hud .pill{ font-family:var(--display); font-size:22px; color:#fff; padding:4px 14px 5px; border-radius:12px;
+#hud .pill{ font-family:var(--display); font-weight:600; font-size:22px; color:#fff; padding:4px 14px 5px; border-radius:12px;
   text-shadow:0 2px 0 rgba(0,0,0,.35); box-shadow:0 3px 0 rgba(0,0,0,.25); min-width:48px; text-align:center; }
 #sf{ background:var(--fire); } #si{ background:var(--ice); }
-#timer{ font-family:var(--display); font-size:20px; color:#fff; background:rgba(0,0,0,.45); padding:4px 12px; border-radius:10px; }
+#timer{ font-family:var(--display); font-weight:600; font-size:20px; color:#fff; background:rgba(0,0,0,.45); padding:4px 12px; border-radius:10px; }
+/* Verlängerung: die Uhr wird golden */
+#timer.golden{ background:var(--accent); color:#3a2300; }
 
 #tut{ position:absolute; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top,0px) + 12px);
   max-width:min(520px, 86%); background:rgba(255,246,230,.95); color:#2b2119; border-radius:14px; padding:10px 16px;
@@ -40,12 +44,12 @@ html,body{ height:100%; margin:0; overflow:hidden; background:var(--bg); overscr
   background:conic-gradient(var(--accent) var(--p,0deg), rgba(0,0,0,.45) var(--p,0deg));
   box-shadow:0 4px 0 rgba(0,0,0,.3); }
 #superBtn span{ position:absolute; inset:7px; border-radius:50%; background:rgba(30,30,30,.75); color:#fff; display:flex; align-items:center; justify-content:center;
-  font-family:var(--display); font-size:17px; }
+  font-family:var(--display); font-weight:600; font-size:17px; }
 #superBtn.ready span{ background:#ffb000; color:#3a2300; animation:pulse 0.9s ease-in-out infinite; }
 @keyframes pulse{ 50%{ transform:scale(1.07); } }
 
 #banner{ white-space:pre-line; line-height:1.15; position:absolute; left:0; right:0; padding:0 16px; top:38%; text-align:center; pointer-events:none; color:#fff;
-  font-family:var(--display); font-size:clamp(28px, 8vmax, 64px); text-shadow:0 4px 0 rgba(0,0,0,.4); }
+  font-family:var(--display); font-weight:600; font-size:clamp(28px, 8vmax, 64px); text-shadow:0 4px 0 rgba(0,0,0,.4); }
 
 /* ---------- Screens ---------- */
 .overlay{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:var(--scrim);
@@ -56,16 +60,22 @@ html,body{ height:100%; margin:0; overflow:hidden; background:var(--bg); overscr
 .sub{ margin:6px 0 12px; color:var(--muted); font-weight:600; }
 .row{ display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; }
 
-.big{ font-family:var(--display); font-size:24px; color:#3a2300; background:var(--accent); border:0; border-radius:16px;
+.big{ font-family:var(--display); font-weight:600; font-size:24px; color:#3a2300; background:var(--accent); border:0; border-radius:16px;
   padding:10px 40px 12px; box-shadow:0 5px 0 #c98f00; cursor:pointer; }
 .big:active{ transform:translateY(3px); box-shadow:0 2px 0 #c98f00; }
 .big:disabled{ opacity:.45; box-shadow:none; }
 .ghost{ font:800 15px var(--text); color:var(--ink); background:transparent; border:2px solid var(--line); border-radius:14px; padding:9px 18px; margin-left:8px; cursor:pointer; }
 button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 
-.gem{ width:26px; height:26px; transform:rotate(45deg); border-radius:5px; background:linear-gradient(135deg,#b9f3ff,#3fb8f0 45%,#7a4dff); box-shadow:0 0 0 3px rgba(122,77,255,.25); display:inline-block; margin:0 4px; }
-.coin{ display:inline-block; width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#fff3b0,#ffc83d 45%,#d18a00); box-shadow:inset 0 0 0 2px #b87400; margin-left:6px; }
-.pp{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:7px; background:linear-gradient(135deg,#c77dff,#7a2cff); font-size:13px; margin-left:6px; }
+/* ---------- Symbole: Taler (Goldmünze), Trainingspunkte (grüner Kreis mit T), Kristall (Sechseck) ---------- */
+.taler{ display:inline-block; width:22px; height:22px; border-radius:50%;
+  background:radial-gradient(circle at 35% 32%,#fff3b0,var(--taler) 48%,#d18a00); box-shadow:inset 0 0 0 2px #b87400; margin-left:6px; }
+.training{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#8ef0b4,var(--training) 55%,#12864a); color:#063d21;
+  font:800 13px var(--text); line-height:1; margin-left:6px; }
+.kristall{ display:inline-block; width:22px; height:24px; margin:0 4px;
+  clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background:linear-gradient(150deg,#cdeaff 0%,#4aa8ff 42%,var(--kristall) 100%); }
 
 /* Willkommen */
 #welcome .panel{ width:min(460px,100%); }
@@ -76,15 +86,16 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 
 /* Lobby: Name oben links, Währungen oben rechts, „Figuren“ links, „Spielen“ in der Mitte */
 .lobby{ display:block; padding:0; }
-.gemPill{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); left:calc(env(safe-area-inset-left,0px) + 12px);
+.topPill{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); left:calc(env(safe-area-inset-left,0px) + 12px);
   display:flex; align-items:center; gap:8px; background:rgba(0,0,0,.6); color:#fff; border-radius:14px; padding:6px 16px 7px 12px;
-  font-family:var(--display); font-size:21px; box-shadow:0 4px 0 rgba(0,0,0,.3); }
-.gemPill .gem{ width:18px; height:18px; margin-left:6px; }
+  font-family:var(--display); font-weight:600; font-size:21px; box-shadow:0 4px 0 rgba(0,0,0,.3); }
+.topPill .kristall{ width:16px; height:18px; margin-left:6px; }
+.topPill .taler, .topPill .training{ width:19px; height:19px; }
 .curPill{ left:auto; right:calc(env(safe-area-inset-right,0px) + 12px); }
 .namePill:has(#pName:empty){ display:none; }
 .figBtn{ position:absolute; left:calc(env(safe-area-inset-left,0px) + 12px); top:50%; transform:translateY(-50%); width:13%; min-width:92px; max-width:140px;
   background:var(--panel); color:var(--ink); border:0; border-radius:18px; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:2px;
-  font-family:var(--display); font-size:20px; box-shadow:0 5px 0 rgba(0,0,0,.3); cursor:pointer; }
+  font-family:var(--display); font-weight:600; font-size:20px; box-shadow:0 5px 0 rgba(0,0,0,.3); cursor:pointer; }
 .figBtn:active{ transform:translateY(calc(-50% + 3px)); box-shadow:0 2px 0 rgba(0,0,0,.3); }
 .lcenter{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:40%; min-width:240px; max-height:calc(100% - 20px);
   display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; background:var(--panel); border-radius:22px; padding:12px 14px 16px;
@@ -94,28 +105,31 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .lcenter .ghost{ margin-left:0; }
 .linfo{ font-weight:800; color:var(--muted); font-size:14px; }
 
-/* Figuren */
+/* ---------- Figurenkarten: helle Karte, Farbband oben, Medaillon, Name, Stärke-Pille, Sterne und EP ---------- */
 .figs .panel.figPanel{ width:min(900px,100%); height:100%; display:flex; flex-direction:column; padding:12px 14px; text-align:left; }
 .figHead{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
 .figHead h2{ margin:0; font-size:24px; } .figHead h2 span{ color:var(--muted); font-size:17px; } .figHead .ghost{ margin:0; }
-.tiles{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; align-content:start; flex:1; min-height:0; overflow-y:auto; touch-action:none;
+.tiles{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-content:start; flex:1; min-height:0; overflow-y:auto; touch-action:none;
   padding:6px 6px 10px 6px; overscroll-behavior:contain; }
-.tile{ position:relative; background:radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--c,#888) 62%, #ffffff) 0%, color-mix(in srgb, var(--c,#888) 70%, #000000) 75%);
-  border:3px solid #1c1530; border-radius:14px; padding:0; cursor:pointer; color:#fff; overflow:hidden; box-shadow:0 4px 0 rgba(0,0,0,.35);
-  font:800 12px var(--text); display:flex; flex-direction:column; align-items:center; gap:1px; min-width:0; }
-.tile span{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.tile[aria-pressed="true"]{ border-color:#ffc83d; box-shadow:0 0 0 3px #ffc83d, 0 4px 0 rgba(0,0,0,.35); }
-.tile .cv{ display:block; width:100%; height:104px; margin-top:4px; }
-.tile .tstr{ display:block; width:100%; background:color-mix(in srgb, var(--c,#888) 45%, #000000); color:#fff; font:800 12.5px var(--text);
-  padding:3px 8px 5px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.tile .tg{ position:absolute; top:5px; left:5px; display:flex; align-items:center; gap:5px; background:rgba(20,14,40,.72); border-radius:9px;
-  padding:2px 8px 3px 5px; font-family:var(--display); font-size:14px; }
-.tile .tg .gem{ width:11px; height:11px; margin:0 2px 0 3px; box-shadow:none; }
-.tile .tbar{ display:flex; align-items:center; gap:6px; width:100%; background:rgba(20,14,40,.72); padding:4px 8px 5px 5px; }
-.tile .tlvl{ flex:0 0 auto; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  background:radial-gradient(circle at 35% 30%,#d9a2ff,#8a2be2 60%,#5a14a8); border:2px solid #fff; font-family:var(--display); font-size:15px; }
-.tile .tname{ flex:1; min-width:0; text-align:right; font-family:var(--display); font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  text-shadow:0 2px 0 rgba(0,0,0,.45); }
+.tile{ position:relative; background:var(--card); border:2px solid var(--line); border-radius:16px; padding:0 8px 8px; cursor:pointer;
+  color:var(--ink); overflow:hidden; box-shadow:0 4px 0 rgba(0,0,0,.22); font:800 12px var(--text);
+  display:flex; flex-direction:column; align-items:center; gap:3px; min-width:0; }
+.tile .tband{ display:block; width:calc(100% + 16px); margin:0 -8px 4px; height:14px; background:var(--c,#888); }
+.tile .tmedal{ display:flex; align-items:center; justify-content:center; width:78px; height:78px; border-radius:50%; overflow:hidden;
+  background:radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--c,#888) 45%, #ffffff), color-mix(in srgb, var(--c,#888) 80%, #000000));
+  border:3px solid var(--c,#888); box-shadow:inset 0 2px 6px rgba(0,0,0,.25); margin-top:-4px; }
+.tile .cv{ display:block; width:100%; height:100%; }
+.tile .tname{ font-family:var(--display); font-weight:600; font-size:17px; line-height:1.1; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tile .tstr{ display:inline-block; max-width:100%; border-radius:999px; padding:2px 10px 3px; font:800 11.5px var(--text); color:#fff;
+  background:color-mix(in srgb, var(--c,#888) 78%, #000000); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tile .tfoot{ display:flex; align-items:center; justify-content:space-between; gap:6px; width:100%; margin-top:2px; }
+.tile .tstars{ letter-spacing:1px; font-size:13px; color:var(--line); }
+.tile .tstars i{ font-style:normal; } .tile .tstars i.on{ color:var(--taler); }
+.tile .tep{ font:800 11.5px var(--text); color:var(--muted); }
+.tile[aria-pressed="true"]{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent), 0 4px 0 rgba(0,0,0,.22); }
+.tile .tcheck{ position:absolute; top:20px; right:6px; width:24px; height:24px; border-radius:50%; background:var(--accent); color:#3a2300;
+  display:none; align-items:center; justify-content:center; font:800 15px var(--text); box-shadow:0 2px 0 rgba(0,0,0,.25); }
+.tile[aria-pressed="true"] .tcheck{ display:flex; }
 
 .figModal{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.45); padding:12px; }
 .figDetail{ width:min(760px,100%); max-height:100%; overflow:hidden; background:var(--panel); border-radius:20px; padding:12px 16px 14px; box-shadow:0 8px 0 rgba(0,0,0,.25);
@@ -123,7 +137,7 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .figDetail > *{ grid-column:2; }
 #detCv{ display:block; grid-column:1; grid-row:1 / span 8; width:100%; height:100%; min-height:150px; align-self:stretch;
   background:radial-gradient(circle at 50% 45%, #3a2b78, #221a4a 70%); border-radius:14px; }
-.figDetail .n{ font-family:var(--display); font-size:22px; }
+.figDetail .n{ font-family:var(--display); font-weight:600; font-size:22px; }
 .figDetail .t{ font-size:13px; color:var(--fire); font-weight:800; }
 .figDetail .ab{ font-size:12.5px; line-height:1.3; } .figDetail .ab b{ color:var(--muted); }
 .stat{ display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:800; color:var(--muted); margin-top:1px; }
@@ -131,34 +145,39 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .bar{ flex:1; height:6px; background:var(--line); border-radius:3px; overflow:hidden; }
 .bar i{ display:block; height:100%; background:var(--fire); }
 .upg{ display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap; font-weight:800; font-size:13px; }
-.upg .ghost{ margin:0; padding:5px 12px; border-color:#7a2cff; }
+.upg .ghost{ margin:0; padding:5px 12px; border-color:var(--training); }
 .upg .ghost:disabled{ opacity:.45; }
+.upg .stars{ letter-spacing:1px; color:var(--line); } .upg .stars i{ font-style:normal; } .upg .stars i.on{ color:var(--taler); }
 .figDetail .row{ margin-top:8px; justify-content:flex-start; }
 .figDetail .row .big{ padding:5px 22px 7px; font-size:19px; }
 .figDetail .row .ghost{ margin:0; padding:6px 12px; }
 .narrow .figDetail{ grid-template-columns:1fr; } .narrow .figDetail > *{ grid-column:1; } .narrow #detCv{ grid-row:auto; height:110px; }
 
-/* Box */
-.boxPanel{ width:min(470px,100%); }
-.boxPanel h1{ margin:0 0 6px; font-size:28px; }
-.boxBtn{ background:none; border:0; padding:18px 10px 6px; cursor:pointer; }
-.box{ display:block; width:110px; height:84px; position:relative; margin:0 auto; border-radius:12px; background:linear-gradient(135deg,#9b5cff,#5a1fd1); box-shadow:0 6px 0 #3b1394; }
-.box::before{ content:""; position:absolute; left:-9px; right:-9px; top:-16px; height:26px; border-radius:10px; background:linear-gradient(135deg,#b98aff,#7a2cff); box-shadow:0 4px 0 #3b1394; }
-.box::after{ content:""; position:absolute; left:calc(50% - 11px); top:-16px; bottom:0; width:22px; background:#ffc83d; }
-.boxBtn.shake .box{ animation:shake .4s; }
-@keyframes shake{ 25%{ transform:rotate(-9deg); } 50%{ transform:rotate(8deg) scale(1.06); } 75%{ transform:rotate(-4deg); } }
-.loot{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; min-height:44px; margin:4px 0 10px; }
-.item{ display:flex; align-items:center; gap:8px; background:var(--card); border-radius:12px; padding:6px 12px; font-family:var(--display); font-size:18px; animation:pop .3s; }
-.item .gem{ width:16px; height:16px; margin:0 3px; }
-.item .coin, .item .pp{ margin-left:0; }
+/* ---------- Siegprämie: drei offene Angebote nebeneinander ---------- */
+.praemiePanel{ width:min(560px,100%); }
+.praemiePanel h1{ margin:0 0 4px; font-size:28px; }
+.offers{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:8px 0 6px; }
+.offer{ display:flex; flex-direction:column; align-items:center; gap:4px; background:var(--card); border:2px solid var(--line); border-radius:16px;
+  padding:12px 6px 10px; cursor:pointer; color:var(--ink); box-shadow:0 4px 0 rgba(0,0,0,.2); }
+.offer:active{ transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.2); }
+.offer .n{ font-family:var(--display); font-weight:600; font-size:24px; line-height:1; }
+.offer .l{ font:800 12px var(--text); color:var(--muted); }
+.offer .taler, .offer .training, .offer .kristall{ width:32px; height:32px; margin:0; font-size:18px; }
+.offer .kristall{ height:35px; }
+.offer:disabled{ opacity:.4; box-shadow:none; }
+.loot{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; min-height:0; margin:4px 0 10px; }
+.item{ display:flex; align-items:center; gap:8px; background:var(--card); border-radius:12px; padding:6px 12px;
+  font-family:var(--display); font-weight:600; font-size:18px; animation:pop .3s; }
+.item .kristall{ width:16px; height:18px; margin:0 3px; }
+.item .taler, .item .training{ margin-left:0; }
 @keyframes pop{ from{ transform:scale(.4); opacity:0; } }
 
 /* Spielende */
 #endTitle{ margin:0 0 4px; }
-#endScore{ font-family:var(--display); font-size:40px; margin:4px 0 14px; }
+#endScore{ font-family:var(--display); font-weight:600; font-size:40px; margin:4px 0 14px; }
 #endScore .f{ color:var(--fire); } #endScore .i{ color:var(--ice); }
 #endScore small{ display:block; font:800 14px var(--text); opacity:.7; }
-.endGems{ font-family:var(--display); font-size:22px; margin:0 0 10px; color:#7a4dff; }
+.endInfo{ font-family:var(--display); font-weight:600; font-size:20px; margin:0 0 10px; color:var(--kristall); }
 .endReward{ background:var(--card); border-radius:14px; padding:8px 12px; margin:0 auto 12px; font-weight:800; max-width:340px; }
 
 /* Niedrige Bildschirme (Handy quer) */
@@ -166,8 +185,9 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .short .big{ padding:6px 36px 8px; font-size:21px; }
 .short .lcenter{ padding:8px 12px 12px; gap:4px; } .short .lcenter h1{ font-size:26px; } .short .lcenter .sub{ font-size:12px; }
 .short .figHead h2{ font-size:21px; }
-.short .boxBtn{ padding-top:16px; } .short .box{ width:88px; height:64px; }
-.short #endScore{ font-size:32px; margin:0 0 6px; } .short .endGems{ font-size:17px; margin-bottom:6px; }
+.short .tile .tmedal{ width:62px; height:62px; } .short .tile .tname{ font-size:15px; }
+.short .offers{ gap:8px; } .short .offer{ padding:8px 4px; } .short .offer .n{ font-size:20px; }
+.short #endScore{ font-size:32px; margin:0 0 6px; } .short .endInfo{ font-size:16px; margin-bottom:6px; }
 .short .figDetail .stat{ font-size:11px; }
 
-@media (prefers-reduced-motion: reduce){ #superBtn.ready span, .boxBtn.shake .box, .item{ animation:none; } }
+@media (prefers-reduced-motion: reduce){ #superBtn.ready span, .item{ animation:none; } }
