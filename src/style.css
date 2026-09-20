@@ -205,6 +205,26 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .item .taler, .item .training{ margin-left:0; }
 @keyframes pop{ from{ transform:scale(.4); opacity:0; } }
 
+/* Nach dem Match: Stand der laufenden Sitzung, noch nicht gutgeschrieben */
+.tally{ background:var(--card); border-radius:14px; padding:8px 14px 10px; margin:0 auto 12px; max-width:420px; }
+.tline{ font-family:var(--display); font-weight:600; font-size:18px; }
+.chips{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:6px 0 4px; }
+.chips:empty{ display:none; }
+.chip{ display:inline-flex; align-items:center; gap:4px; background:var(--panel); border:2px solid var(--line);
+  border-radius:999px; padding:3px 12px 4px; font:800 13px var(--text); }
+.chip .medaille{ margin:5px 0 0; }
+.chip b{ font-family:var(--display); font-weight:600; font-size:15px; }
+.tally small{ display:block; font-weight:600; font-size:12px; color:var(--muted); }
+/* „Spiel verlassen“ steht gleichwertig neben „Nochmal spielen“, ist aber ruhiger */
+.ghostBig{ background:var(--card); color:var(--ink); box-shadow:0 5px 0 var(--line); }
+.ghostBig:active{ box-shadow:0 2px 0 var(--line); }
+
+/* Abschluss einer Sitzung */
+.sumPanel{ width:min(520px,100%); }
+.sumPanel h1{ font-size:30px; }
+.sumRow{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:0 0 8px; }
+.sumList{ display:flex; flex-direction:column; gap:2px; font-weight:800; font-size:14px; color:var(--muted); margin:0 0 12px; }
+
 /* Spielende */
 #endTitle{ margin:0 0 4px; }
 #endScore{ font-family:var(--display); font-weight:600; font-size:40px; margin:4px 0 14px; }
@@ -228,6 +248,9 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .short .tile .tmedal{ width:62px; height:62px; } .short .tile .tname{ font-size:15px; }
 .short .offers{ gap:8px; } .short .offer{ padding:8px 4px; } .short .offer .n{ font-size:20px; }
 .short #endScore{ font-size:32px; margin:0 0 6px; } .short .endInfo{ font-size:16px; margin-bottom:6px; }
+.short .tally{ padding:5px 12px 7px; margin-bottom:8px; } .short .tline{ font-size:16px; }
+.short .chips{ margin:4px 0 2px; } .short .tally small{ font-size:11px; }
+.short .sumPanel h1{ font-size:26px; } .short .sumList{ font-size:12.5px; margin-bottom:8px; }
 .short .endMedal{ padding:4px 14px 8px; margin-bottom:6px; gap:10px; }
 .short .medaille.gross{ width:34px; height:34px; margin-top:9px; } .short .medaille.gross::before{ top:-9px; width:19px; height:11px; }
 .short .endMedal b{ font-size:17px; }

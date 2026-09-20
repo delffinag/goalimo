@@ -54,7 +54,6 @@
     <div class="lcenter">
       <h1 class="display">Goalimo</h1>
       <div class="linfo" id="lobbyInfo"></div>
-      <p class="sub" id="lobbyDesc"></p>
       <button class="ghost" id="lobbyPraemie" hidden>Prämie wählen</button>
     </div>
     <div class="modePick" id="modePick" role="group" aria-label="Spielmodus wählen">
@@ -97,12 +96,19 @@
     <div class="panel">
       <h1 class="display" id="endTitle">Sieg!</h1>
       <div id="endScore"></div>
-      <div class="endMedal" id="endMedal" hidden></div>
-      <p class="endInfo" id="endInfo"></p>
-      <div class="endReward" id="endReward" hidden></div>
-      <div><button class="big" id="endPraemie" hidden>Prämie wählen</button></div>
-      <button class="big" id="again">Nochmal</button>
-      <button class="ghost" id="toMenu">Zur Lobby</button>
+      <div class="tally" id="endTally"></div>
+      <div class="row"><button class="big" id="endAgain">Nochmal spielen</button><button class="big ghostBig" id="endLeave">Spiel verlassen</button></div>
+    </div>
+  </div>
+
+  <div id="summary" class="overlay" hidden>
+    <div class="panel sumPanel">
+      <h1 class="display">Sitzung beendet</h1>
+      <p class="sub" id="sumMatches"></p>
+      <div class="sumRow" id="sumMedals"></div>
+      <div class="sumList" id="sumEp"></div>
+      <div class="endReward" id="sumReward" hidden></div>
+      <div class="row"><button class="big" id="sumPraemie" hidden>Prämie wählen</button><button class="big" id="sumDone">Zur Lobby</button></div>
     </div>
   </div>
 </div>

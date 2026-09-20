@@ -43,10 +43,13 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 - Spielzeit **3:00**.
 - Gleichstand nach Ablauf: **Golden Goal**, höchstens 60 s. Fällt kein Punkt, endet das Spiel unentschieden.
 - Ein **gelungener Pass** lädt den Super des Passgebers um 25 %.
+- Nach jedem Match wählt man **„Nochmal spielen“ oder „Spiel verlassen“**. Eine Reihe von Matches ist eine *Sitzung*:
+  Verbucht wird erst beim Verlassen, dann aber alles auf einmal – mit einer Abschluss-Übersicht.
 - Jeder Sieg gibt eine bleibende **Medaille**: Gold ohne Gegentreffer, Silber ab zwei Punkten Vorsprung,
   sonst Bronze. Medaillen gehen nie verloren; der Medaillenspiegel steht in der Lobby unter dem Namen.
 - Ein Sieg gibt zusätzlich eine **Siegprämie**: drei offene Angebote (40–60 Taler, 15–25 Trainingspunkte, 2–4 Kristalle),
-  der Spieler wählt genau eines. Keine Zufallsziehung, kein Kauf mit echtem Geld.
+  der Spieler wählt genau eines. Bei mehreren Siegen in einer Sitzung werden die Prämien nacheinander gewählt.
+  Keine Zufallsziehung, kein Kauf mit echtem Geld.
 - Unentschieden: keine Prämie. Niederlage: −3 Kristalle (nie unter 0).
 - **Erfahrung** (EP) je Figur steigt immer: Sieg +10, Unentschieden +5, Niederlage +2.
 - **Trainingsstufe** 1–5 (als Sterne), je Stufe +8 % Leben, Schaden und Heilung.
@@ -60,8 +63,8 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 | `src/ai` | Bots: Wegfindung, Pässe, bewusst ungenaues Zielen. |
 | `src/input` | Joysticks, Super-Stick, Tastatur, Maus. Liefert pro Tick eine `PlayerInput`. |
 | `src/render` | Canvas-Darstellung von Spielfeld, Figuren, Zielhilfe und Porträts. Liest die Welt nur. |
-| `src/meta` | Name, Taler, Trainingspunkte, Kristalle, Siegprämien, Medaillen, Trainingsstufen, Erfahrung, Speicherung (localStorage, austauschbar). |
-| `src/ui` | DOM-Screens: Willkommen, Lobby, Figuren, Siegprämie, Spielende, Anzeigen im Match, Bühne. |
+| `src/meta` | Name, Taler, Trainingspunkte, Kristalle, Siegprämien, Medaillen, Trainingsstufen, Erfahrung, laufende Sitzung, Speicherung (localStorage, austauschbar). |
+| `src/ui` | DOM-Screens: Willkommen, Lobby, Figuren, Siegprämie, Spielende, Abschluss der Sitzung, Anzeigen im Match, Bühne. |
 | `src/game.ts` | Verbindet Eingabe → Simulation → Darstellung. |
 
 Die Simulation ist strikt vom Rendering getrennt: Sie bekommt pro Tick nur die Eingabe des Spielers und meldet Ereignisse

@@ -42,13 +42,12 @@ export function initLobby(app: App): () => void {
   }
 
   function render(): void {
-    const p = app.progress, T = FIGURES[p.chosen], m = MODES[p.modus];
+    const p = app.progress, T = FIGURES[p.chosen];
     $("pName").textContent = p.playerName;
     $("talerCount").textContent = String(p.taler);
     $("trainingCount").textContent = String(p.training);
     $("kristallCount").textContent = String(p.kristalle);
     $("lobbyInfo").textContent = `${T.name}, ${T.className}`;
-    $("lobbyDesc").textContent = `${m.name} 3 gegen 3: ${m.desc}`;
     for (const b of btns.children as HTMLCollectionOf<HTMLElement>)
       b.setAttribute("aria-pressed", String(b.dataset.m === p.modus));
     for (const kind of MEDAL_KINDS) medals.querySelector(`b[data-m="${kind}"]`)!.textContent = String(p.medaillen[kind]);

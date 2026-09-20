@@ -1,49 +1,59 @@
-import { FIGURES } from "../data/figures";
-import { MEDALS } from "../data/balance";
-import { applyMatchResult } from "../meta/progress";
+import { MEDALS, type MedalKind } from "../data/balance";
+import { medalEntries, resultLine, sessionTally } from "../meta/session";
 import type { MatchResult } from "../sim/world";
 import type { App } from "./app";
 import { $ } from "./dom";
-import { updatePraemieButtons } from "./praemie";
 
 const TITLE: Record<MatchResult, string> = { win: "Sieg!", draw: "Unentschieden", loss: "Niederlage" };
 
-/** Spielende: Ergebnis verbuchen und anzeigen. Gibt die Funktion zum Anzeigen zurück. */
+export function medalChip(kind: MedalKind, n: number): HTMLElement {
+  const chip = document.createElement("span");
+  chip.className = "chip"; chip.dataset.m = kind;
+  const icon = document.createElement("span");
+  icon.className = `medaille ${kind}`; icon.setAttribute("aria-hidden", "true");
+  const b = document.createElement("b"); b.textContent = String(n);
+  chip.append(icon, b);
+  chip.setAttribute("aria-label", `${n} × ${MEDALS[kind].name}`);
+  return chip;
+}
+
+/**
+ * Nach einem Match: Ergebnis, Spielstand und die Wahl „Nochmal spielen“ oder „Spiel verlassen“.
+ * Gutgeschrieben wird hier nichts – das passiert gesammelt beim Verlassen (siehe meta/session.ts).
+ * Gibt die Funktion zum Anzeigen zurück.
+ */
 export function initEnd(app: App): (result: MatchResult) => void {
-  $("endPraemie").addEventListener("click", () => app.openPraemie("end"));
-  $("again").addEventListener("click", () => app.play());
-  $("toMenu").addEventListener("click", () => { app.game.toMenu(); app.show("lobby"); });
+  $("endAgain").addEventListener("click", () => app.play());
+  $("endLeave").addEventListener("click", () => app.leave());
 
   return result => {
-    const p = app.progress, w = app.game.world;
-    const s = applyMatchResult(p, w.player ? w.player.type : p.chosen, result, w.score);
-    app.save();
+    const w = app.game.world;
     $("endTitle").textContent = TITLE[result];
-    const main = result === "win" ? "Du hast eine Siegprämie gewonnen!"
-      : result === "draw" ? "Unentschieden: keine Prämie."
-      : s.kristalleLost > 0 ? `−${s.kristalleLost} Kristalle. Du hast jetzt ${p.kristalle}.` : "Keine Kristalle verloren, dein Konto war leer.";
-    $("endInfo").textContent = `${main} ${FIGURES[s.figure].name}: +${s.epPlus} EP (jetzt ${s.epTotal}).`;
-    // Medaille für den Sieg: bleibt für immer, unabhängig von der Siegprämie
-    const medalBox = $("endMedal");
-    medalBox.hidden = !s.medal;
-    if (s.medal) {
-      const m = MEDALS[s.medal];
-      const icon = document.createElement("span");
-      icon.className = `medaille gross ${s.medal}`; icon.setAttribute("aria-hidden", "true");
-      const text = document.createElement("span");
-      const name = document.createElement("b"); name.textContent = m.name;
-      const why = document.createElement("small"); why.textContent = m.why;
-      text.append(name, why);
-      medalBox.replaceChildren(icon, text);
-    }
-    const reward = $("endReward");
-    reward.hidden = !s.fresh.length;
-    reward.textContent = s.fresh.map(r => `${r.icon} Neue Belohnung: ${r.name}! ${r.desc}`).join(" ");
     const f = document.createElement("span"), i = document.createElement("span"), label = document.createElement("small");
     f.className = "f"; f.textContent = String(w.score[0]); i.className = "i"; i.textContent = String(w.score[1]);
     label.textContent = w.golden ? `${w.mode.label} nach Verlängerung` : w.mode.label;
     $("endScore").replaceChildren(f, " : ", i, label);
-    updatePraemieButtons(p);
+
+    // Laufende Sitzung: was bisher zusammengekommen ist und beim Verlassen wartet
+    const t = sessionTally(app.session);
+    const line = document.createElement("div");
+    line.className = "tline";
+    line.textContent = `${t.matches === 1 ? "1 Match" : `${t.matches} Matches`}: ${resultLine(t)}`;
+    const chips = document.createElement("div");
+    chips.className = "chips";
+    for (const [kind, n] of medalEntries(t.medals)) chips.append(medalChip(kind, n));
+    if (t.praemien) {
+      const prize = document.createElement("span");
+      prize.className = "chip"; prize.dataset.m = "praemie";
+      prize.textContent = t.praemien === 1 ? "1 Siegprämie" : `${t.praemien} Siegprämien`;
+      chips.append(prize);
+    }
+    const hint = document.createElement("small");
+    hint.textContent = t.praemien
+      ? "Gutgeschrieben wird alles, wenn du das Spiel verlässt."
+      : "Gewinn ein Match, dann gibt es beim Verlassen etwas zu holen.";
+    $("endTally").replaceChildren(line, chips, hint);
+
     app.show("end");
   };
 }

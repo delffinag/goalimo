@@ -19,7 +19,9 @@ function icon(kind: PraemieKind): HTMLElement {
 /** Der Knopf „Prämie wählen“ ist nur sichtbar, solange eine Siegprämie offen ist */
 export function updatePraemieButtons(p: Progress): void {
   const text = p.siegpraemien > 1 ? `Prämie wählen (${p.siegpraemien})` : "Prämie wählen";
-  for (const id of ["endPraemie", "lobbyPraemie"]) { const b = $(id); b.hidden = p.siegpraemien < 1; b.textContent = text; }
+  const b = $("lobbyPraemie");
+  b.hidden = p.siegpraemien < 1;
+  b.textContent = text;
 }
 
 function offerButton(item: PraemieItem, choose: (item: PraemieItem) => void): HTMLButtonElement {
@@ -36,39 +38,58 @@ function offerButton(item: PraemieItem, choose: (item: PraemieItem) => void): HT
 
 /**
  * Siegprämie: drei offene Angebote nebeneinander, der Spieler wählt genau eines.
- * Keine verdeckte Zufallsziehung, kein Kauf mit echtem Geld. Gibt die Funktion zum Öffnen zurück.
+ * Keine verdeckte Zufallsziehung, kein Kauf mit echtem Geld. Offene Prämien werden
+ * nacheinander abgearbeitet – eine pro Sieg der letzten Sitzung.
+ * Gibt die Funktion zum Öffnen zurück.
  */
-export function initPraemie(app: App): (from: "lobby" | "end") => void {
+export function initPraemie(app: App): (from: "lobby" | "summary") => void {
   const offers = $("offers"), hint = $("praemieHint"), result = $("praemieResult"), done = $("praemieDone");
-  let origin: "lobby" | "end" = "lobby";
+  let origin: "lobby" | "summary" = "lobby";
+  let total = 0, taken = 0;
+
+  function showOffers(): void {
+    offers.replaceChildren(...praemieAngebote().map(item => offerButton(item, choose)));
+    hint.textContent = total > 1
+      ? `Prämie ${taken + 1} von ${total}: drei Angebote, du wählst genau eines.`
+      : "Drei Angebote, du wählst genau eines.";
+    done.hidden = true;
+  }
 
   function choose(item: PraemieItem): void {
     const fresh = waehlePraemie(app.progress, item);
     if (!fresh) return;
     app.save();
+    taken++;
     for (const b of offers.children) (b as HTMLButtonElement).disabled = true;
     const label = LABEL[item.k][1];
     const got = document.createElement("div"); got.className = "item";
     got.append(icon(item.k), document.createTextNode(`+${item.n} ${label}`));
-    result.replaceChildren(got);
+    result.append(got);
     for (const r of fresh) {
       const el = document.createElement("div"); el.className = "item";
       el.textContent = `${r.icon} Neu: ${r.name}`;
       result.append(el);
     }
-    hint.textContent = `Gewählt: ${item.n} ${label}.`;
+    const left = app.progress.siegpraemien;
+    hint.textContent = left
+      ? `Gewählt: ${item.n} ${label}. Noch ${left === 1 ? "eine Prämie" : `${left} Prämien`} offen.`
+      : `Gewählt: ${item.n} ${label}.`;
+    done.textContent = left ? "Nächste Prämie" : "Fertig";
     done.hidden = false;
   }
 
-  done.addEventListener("click", () => { updatePraemieButtons(app.progress); app.show(origin); });
+  done.addEventListener("click", () => {
+    if (app.progress.siegpraemien > 0) { showOffers(); return; }
+    updatePraemieButtons(app.progress);
+    app.show(origin);
+  });
 
   return from => {
     if (app.progress.siegpraemien < 1) return;
     origin = from;
-    offers.replaceChildren(...praemieAngebote().map(item => offerButton(item, choose)));
+    total = app.progress.siegpraemien; taken = 0;
     result.replaceChildren();
-    done.hidden = true;
-    hint.textContent = "Drei Angebote, du wählst genau eines.";
+    showOffers();
     app.show("praemie");
   };
 }

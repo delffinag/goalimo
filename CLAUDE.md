@@ -45,9 +45,14 @@ den Code aber sauber in Module aufteilen.
 - Beim ersten Start einmalig Spielernamen abfragen (2–12 Zeichen), danach nicht mehr änderbar.
 - Lobby: Name oben links, Taler/Trainingspunkte/Kristalle oben rechts, Knopf „Figuren“ links,
   Spielmodus unten links, „Spielen“ unten rechts.
+- Sitzung: Nach jedem Match wählt der Spieler „Nochmal spielen“ oder „Spiel verlassen“. Der Bildschirm nach dem Match
+  zeigt nur Ergebnis, Spielstand und den Stand der Sitzung – gutgeschrieben wird nichts. Erst beim Verlassen wird alles
+  auf einmal verbucht (je Sieg eine Siegprämie, dazu Medaillen, Erfahrung und Kristallverlust) und in einer
+  Abschluss-Übersicht gezeigt. Eine Sitzung, die nie verlassen wurde (Tab geschlossen), wird beim nächsten Start
+  abgerechnet; sie liegt dafür unter `gl-sitzung` im Speicher.
 - Medaille: Jeder Sieg gibt eine bleibende Medaille, sie kann nie verloren gehen. Gold für einen Sieg ohne
   Gegentreffer, Silber ab zwei Punkten Vorsprung, sonst Bronze. Medaillenspiegel in der Lobby unter dem Namen.
-- Belohnung: Ein Sieg gibt eine Siegprämie. Der Spieler wählt 1 von 3 sichtbaren Angeboten
+- Belohnung: Ein Sieg gibt eine Siegprämie, gewählt wird sie beim Verlassen. Der Spieler wählt 1 von 3 sichtbaren Angeboten
   (40–60 Taler, 15–25 Trainingspunkte oder 2–4 Kristalle). Keine Zufallsziehung, keine Boxen.
   Niederlage: −3 Kristalle (nie unter 0). Erfahrung (EP) pro Figur, steigt nur: Sieg +10, Unentschieden +5, Niederlage +2.
 - Trainingsstufe 1–5 (als Sterne), jede Stufe +8 % Leben/Schaden/Heilung. Kosten: 50/20, 100/40, 180/70, 300/100 (Taler/Trainingspunkte).
