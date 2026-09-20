@@ -2,7 +2,7 @@
 // durch die Dateiliste und einen Hash darüber: neue Version = neuer Cache, alte Caches werden gelöscht.
 const VERSION = "__VERSION__";
 const FILES = __FILES__;
-const PREFIX = "fussballspiel-";
+const PREFIX = "goalimo-";
 const CACHE = PREFIX + VERSION;
 
 self.addEventListener("install", e => {

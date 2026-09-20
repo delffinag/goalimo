@@ -12,8 +12,12 @@ const K = {
   unlocked: "gl-belohnungen", chosen: "gl-figur", tut: "gl-uebung", migriert: "gl-migriert"
 };
 
-/** Schlüssel des Vorgängers (Münzen, Powerpunkte, Juwelen, Boxen). Werden einmalig übernommen. */
+/**
+ * Schlüssel des Vorgängers. Sie werden einmalig gelesen und unter den neuen Namen abgelegt.
+ * Die alten Namen sind nur hier nötig und tauchen sonst nirgends auf.
+ */
 const OLD: [alt: string, neu: string][] = [
+  // compliance-ok: alte Speicher-Schlüssel, werden nur beim ersten Start gelesen
   ["fgf-player", K.player], ["fgf-coins", K.taler], ["fgf-pp", K.training], ["fgf-gems", K.kristalle],
   ["fgf-boxes", K.siegpraemien], ["fgf-levels", K.stufen], ["fgf-figgems", K.erfahrung],
   ["fgf-unlocked", K.unlocked], ["fgf-chosen", K.chosen], ["fgf-tut", K.tut]

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { expectLobby, PLAYER, scoreGoal, stagePos, start, waitForPhase } from "./helpers";
+import { ballInFrontOfGoal, expectLobby, PLAYER, scoreGoal, stagePos, start, tapStage, waitForPhase, winMatch } from "./helpers";
 
 // Kein Test darf einen Skriptfehler auf der Seite hinterlassen
 let pageErrors: string[] = [];
@@ -32,7 +32,7 @@ test("Namenseingabe: einmalig beim ersten Start, danach fest", async ({ page }) 
 });
 
 test("Lobby: Name oben links, Währungen oben rechts, Figuren links, Spielen in der Mitte", async ({ page }) => {
-  await start(page, { ...PLAYER, "fgf-coins": "12", "fgf-pp": "7", "fgf-gems": "3" });
+  await start(page, { ...PLAYER, "gl-taler": "12", "gl-training": "7", "gl-kristalle": "3" });
   await expectLobby(page);
   const name = await stagePos(page, page.locator(".namePill")), money = await stagePos(page, page.locator(".curPill"));
   const figures = await stagePos(page, page.locator("#lobbySetup")), play = await stagePos(page, page.locator("#lobbyPlay"));
@@ -40,18 +40,41 @@ test("Lobby: Name oben links, Währungen oben rechts, Figuren links, Spielen in 
   expect(money.x).toBeGreaterThan(0.7); expect(money.y).toBeLessThan(0.3);
   expect(figures.x).toBeLessThan(0.25); expect(Math.abs(figures.y - 0.5)).toBeLessThan(0.1);
   expect(Math.abs(play.x - 0.5)).toBeLessThan(0.05);
-  await expect(page.locator("#coinCount")).toHaveText("12");
-  await expect(page.locator("#ppCount")).toHaveText("7");
-  await expect(page.locator("#gemCount")).toHaveText("3");
-  await expect(page.locator("#lobbyBox")).toBeHidden();
+  await expect(page.locator("#talerCount")).toHaveText("12");
+  await expect(page.locator("#trainingCount")).toHaveText("7");
+  await expect(page.locator("#kristallCount")).toHaveText("3");
+  await expect(page.locator("#lobbyPraemie")).toBeHidden();
 });
 
-test("Figur wählen: Auswahl gilt in der Lobby und nach dem Neuladen", async ({ page }) => {
-  await start(page, PLAYER);
+test("Alter Spielstand wird übernommen", async ({ page }) => {
+  // compliance-ok: alte Speicher-Schlüssel, nur zum Prüfen der Migration
+  await start(page, { "fgf-player": "Alti", "fgf-coins": "77", "fgf-pp": "8", "fgf-gems": "4", "fgf-chosen": "flitzer" });
+  await expectLobby(page);
+  await expect(page.locator("#pName")).toHaveText("Alti");
+  await expect(page.locator("#talerCount")).toHaveText("77");
+  await expect(page.locator("#trainingCount")).toHaveText("8");
+  await expect(page.locator("#kristallCount")).toHaveText("4");
+  await expect(page.locator("#lobbyInfo")).toHaveText("Zisch, Flitzer");
+});
+
+test("Figurenkarte: Farbband, Medaillon, Name, Stärke, Sterne und EP, Häkchen bei der Auswahl", async ({ page }) => {
+  await start(page, { ...PLAYER, "gl-erfahrung": '{"brecher":25}' });
   await expect(page.locator("#lobbyInfo")).toHaveText("Rumpel, Nahkämpfer");
   await page.locator("#lobbySetup").click();
   await expect(page.locator(".tile")).toHaveCount(3);
-  await expect(page.locator('.tile[data-k="brecher"]')).toHaveAttribute("aria-pressed", "true");
+
+  const card = page.locator('.tile[data-k="brecher"]');
+  await expect(card).toHaveAttribute("aria-pressed", "true");
+  await expect(card.locator(".tband")).toBeVisible();
+  await expect(card.locator(".tmedal .cv")).toBeVisible();
+  await expect(card.locator(".tname")).toHaveText("Rumpel");
+  await expect(card.locator(".tstr")).toHaveText("Hält am meisten aus");
+  await expect(card.locator(".tstars i")).toHaveCount(5);
+  await expect(card.locator(".tstars i.on")).toHaveCount(1);
+  await expect(card.locator(".tep")).toHaveText("25 EP");
+  // Häkchen nur bei der gewählten Figur
+  await expect(card.locator(".tcheck")).toBeVisible();
+  await expect(page.locator('.tile[data-k="flitzer"] .tcheck')).toBeHidden();
 
   // Früherer Fehler: eine globale canvas-Regel hat alle Figurenbilder bildschirmfüllend gemacht
   const stage = (await page.locator("#stage").boundingBox())!;
@@ -63,18 +86,16 @@ test("Figur wählen: Auswahl gilt in der Lobby und nach dem Neuladen", async ({ 
 
   await page.locator('.tile[data-k="flitzer"]').click();
   await expect(page.locator("#detName")).toHaveText("Zisch");
-  await expect(page.locator("#detRole")).toHaveText("Flitzer. Stärke: Am schnellsten");
   await page.locator("#detPick").click();
-  await expect(page.locator('.tile[data-k="flitzer"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('.tile[data-k="flitzer"] .tcheck')).toBeVisible();
   await page.locator("#menuBack").click();
   await expect(page.locator("#lobbyInfo")).toHaveText("Zisch, Flitzer");
-
   await page.reload();
   await expect(page.locator("#lobbyInfo")).toHaveText("Zisch, Flitzer");
 });
 
-test("Match starten: erst Tutorial, dann Anstoß mit 2:30 auf der Uhr", async ({ page }) => {
-  await start(page, { "fgf-player": "Testi" });
+test("Match starten: erst Übungsrunde, dann Anstoß mit 3:00 auf der Uhr", async ({ page }) => {
+  await start(page, { "gl-name": "Testi" });
   await page.locator("#lobbyPlay").click();
   await expect(page.locator("#lobby")).toBeHidden();
   await expect(page.locator("#tut")).toContainText("Zieh links auf dem Bildschirm");
@@ -82,21 +103,21 @@ test("Match starten: erst Tutorial, dann Anstoß mit 2:30 auf der Uhr", async ({
 
   await page.locator("#skip").click();
   await expect(page.locator("#hud")).toBeVisible();
-  await expect(page.locator("#timer")).toHaveText("2:30");
+  await expect(page.locator("#timer")).toHaveText("3:00");
   await expect(page.locator("#sf")).toHaveText("⚽ 0");
   await expect(page.locator("#banner")).toHaveText(/^[123]$/);
   await expect(page.locator("#superBtn")).toBeVisible();
 
   await waitForPhase(page, "match");
-  await expect(page.locator("#timer")).not.toHaveText("2:30");
+  await expect(page.locator("#timer")).not.toHaveText("3:00");
   const world = await page.evaluate(() => { const w = window.__game.world; return { ents: w.ents.length, teams: w.ents.map(e => e.team), name: w.player!.name }; });
   expect(world).toEqual({ ents: 6, teams: [0, 0, 0, 1, 1, 1], name: "Testi" });
 
-  // Das Tutorial kommt nur beim allerersten Mal
-  expect(await page.evaluate(() => localStorage.getItem("fgf-tut"))).toBe("1");
+  // Die Übungsrunde kommt nur beim allerersten Mal
+  expect(await page.evaluate(() => localStorage.getItem("gl-uebung"))).toBe("1");
 });
 
-test("Tor fällt, Sieg bei 2 Toren, Box öffnen", async ({ page }) => {
+test("Tor fällt und wird gemeldet, Sieg bei 3 Toren", async ({ page }) => {
   await start(page, PLAYER);
   await page.locator("#lobbyPlay").click();
 
@@ -105,61 +126,163 @@ test("Tor fällt, Sieg bei 2 Toren, Box öffnen", async ({ page }) => {
   await expect(page.locator("#sf")).toHaveText("⚽ 1");
   await expect(page.locator("#si")).toHaveText("⚽ 0");
 
+  // Nach zwei Toren läuft das Match weiter, erst das dritte gewinnt
+  await scoreGoal(page);
+  await expect(page.locator("#sf")).toHaveText("⚽ 2");
+  await expect(page.locator("#end")).toBeHidden();
+
   await scoreGoal(page);
   await expect(page.locator("#end")).toBeVisible({ timeout: 10_000 });
   await expect(page.locator("#endTitle")).toHaveText("Sieg!");
-  await expect(page.locator("#endScore")).toContainText("2 : 0");
-  await expect(page.locator("#endGems")).toHaveText("Du hast eine Box gewonnen! Rumpel: +8 Figuren-Juwelen (jetzt 8).");
+  await expect(page.locator("#endScore")).toContainText("3 : 0");
+  await expect(page.locator("#endInfo")).toHaveText("Du hast eine Siegprämie gewonnen! Rumpel: +10 EP (jetzt 10).");
+});
 
-  await page.locator("#endBox").click();
-  await expect(page.locator("#boxHint")).toHaveText("Tippe auf die Box. Sie enthält 3 Objekte.");
-  for (let i = 1; i <= 3; i++) {
-    await page.locator("#boxBtn").click();
-    await expect(page.locator("#loot .item .coin, #loot .item .pp, #loot .item .gem")).toHaveCount(i);
-  }
-  await expect(page.locator("#boxHint")).toHaveText("Die Box ist leer.");
-  await expect(page.locator("#boxBtn")).toBeHidden();
+test("Siegprämie: drei offene Angebote, genau eines wird gebucht, danach ist der Knopf weg", async ({ page }) => {
+  await start(page, PLAYER);
+  await page.locator("#lobbyPlay").click();
+  await winMatch(page);
+  await expect(page.locator("#end")).toBeVisible({ timeout: 10_000 });
 
-  // Was in der Box war, steht danach in der Lobby
-  const loot = await page.locator("#loot .item").allTextContents();
-  const sum = (label: string) => loot.filter(t => t.endsWith(label)).reduce((n, t) => n + parseInt(t.slice(1), 10), 0);
-  await page.locator("#boxDone").click();
-  await expect(page.locator("#endBox")).toBeHidden();
+  const praemie = page.locator("#endPraemie");
+  await expect(praemie).toBeVisible();
+  await praemie.click();
+
+  const offers = page.locator(".offer");
+  await expect(offers).toHaveCount(3);
+  await expect(page.locator('.offer[data-k="taler"]')).toBeVisible();
+  await expect(page.locator('.offer[data-k="training"]')).toBeVisible();
+  await expect(page.locator('.offer[data-k="kristalle"]')).toBeVisible();
+
+  // Die Mengen stehen offen da, nichts ist verdeckt
+  const taler = Number(await page.locator('.offer[data-k="taler"] .n').textContent());
+  expect(taler).toBeGreaterThanOrEqual(40);
+  expect(taler).toBeLessThanOrEqual(60);
+
+  await page.locator('.offer[data-k="taler"]').click();
+  await expect(page.locator("#praemieResult")).toContainText(`+${taler} Taler`);
+  // Nach der Wahl lässt sich kein zweites Angebot mehr buchen
+  for (const kind of ["taler", "training", "kristalle"]) await expect(page.locator(`.offer[data-k="${kind}"]`)).toBeDisabled();
+
+  await page.locator("#praemieDone").click();
+  await expect(praemie).toBeHidden();
   await page.locator("#toMenu").click();
   await expectLobby(page);
-  await expect(page.locator("#coinCount")).toHaveText(String(sum("Münzen")));
-  await expect(page.locator("#ppCount")).toHaveText(String(sum("Powerpunkte")));
-  await expect(page.locator("#gemCount")).toHaveText(String(sum("Juwelen")));
-  await expect(page.locator("#lobbyBox")).toBeHidden();
+  await expect(page.locator("#talerCount")).toHaveText(String(taler));
+  await expect(page.locator("#trainingCount")).toHaveText("0");
+  await expect(page.locator("#kristallCount")).toHaveText("0");
+  await expect(page.locator("#lobbyPraemie")).toBeHidden();
 });
 
-test("Aufwerten: kostet 50 Münzen + 20 Powerpunkte und gibt +8 % Leben", async ({ page }) => {
-  await start(page, { ...PLAYER, "fgf-coins": "60", "fgf-pp": "25" });
-  await page.locator("#lobbySetup").click();
-  await page.locator('.tile[data-k="brecher"]').click();
-  await expect(page.locator("#detLvl")).toContainText("Power-Level 1 von 5");
-  await expect(page.locator("#detStats")).toContainText("Leben 8000");
-  const up = page.locator("#detUp");
-  await expect(up).toHaveText("Verbessern: 50 Münzen + 20 Powerpunkte");
-  await up.click();
+test("Golden Goal: bei 0:0 nach Ablauf, das nächste Tor beendet das Spiel", async ({ page }) => {
+  // Verkürzte Spielzeit als Testparameter, damit die Verlängerung schnell erreicht ist
+  await start(page, PLAYER, "&spielzeit=4&goldengoal=30");
+  await page.locator("#lobbyPlay").click();
+  await waitForPhase(page, "match");
 
-  await expect(page.locator("#detLvl")).toContainText("Power-Level 2 von 5");
+  // Ball und alle Figuren parken, damit in der kurzen Spielzeit kein Tor fällt
+  await page.evaluate(() => {
+    const w = window.__game.world;
+    for (const e of w.ents) { e.x = 900; e.y = 1000; }
+    Object.assign(w.ball, { carrier: null, last: null, passer: null, x: 900, y: 60, vx: 0, vy: 0 });
+  });
+
+  await page.waitForFunction(() => window.__game.world.golden, undefined, { timeout: 15_000 });
+  await expect(page.locator("#banner")).toHaveText("Golden Goal!");
+  await expect(page.locator("#timer")).toHaveClass(/golden/);
+  expect(await page.evaluate(() => window.__game.world.score)).toEqual([0, 0]);
+
+  await waitForPhase(page, "match");
+  await ballInFrontOfGoal(page);
+  await tapStage(page, 0.75, 0.5);
+
+  await expect(page.locator("#end")).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("#endTitle")).toHaveText("Sieg!");
+  await expect(page.locator("#endScore")).toContainText("1 : 0");
+  await expect(page.locator("#endScore")).toContainText("Tore nach Golden Goal");
+});
+
+test("Pass-Bonus: ein Pass lädt den Super des Passgebers um 25 %", async ({ page }) => {
+  await start(page, PLAYER);
+  await page.locator("#lobbyPlay").click();
+  await waitForPhase(page, "match");
+
+  // Spieler mit Ball, ein Mitspieler genau auf der Linie zum Tor, alle anderen weit weg
+  await page.evaluate(() => {
+    const w = window.__game.world, p = w.player!, mate = w.ents[1];
+    for (const e of w.ents) { e.x = 200; e.y = 1040; }
+    p.x = 1000; p.y = 250; p.cool = 0; p.superC = 0;
+    mate.x = 1168; mate.y = 315; mate.pickCool = 0;
+    Object.assign(w.ball, { carrier: p, last: p, passer: null, x: p.x, y: p.y, vx: 0, vy: 0 });
+  });
+
+  // Tippen zielt automatisch aufs gegnerische Tor – der Mitspieler steht auf dieser Linie
+  await tapStage(page, 0.75, 0.5);
+  await page.waitForFunction(() => window.__game.world.ball.carrier === window.__game.world.ents[1], undefined, { timeout: 10_000 });
+
+  const superC = await page.evaluate(() => window.__game.world.player!.superC);
+  expect(superC).toBeGreaterThan(0.25);
+  expect(superC).toBeLessThan(0.35);
+});
+
+test("Trainieren: Kosten werden abgezogen und die Sterne steigen", async ({ page }) => {
+  await start(page, { ...PLAYER, "gl-taler": "60", "gl-training": "25" });
+  await page.locator("#lobbySetup").click();
+  const card = page.locator('.tile[data-k="brecher"]');
+  await expect(card.locator(".tstars i.on")).toHaveCount(1);
+  await card.click();
+
+  await expect(page.locator("#detStufe")).toContainText("Trainingsstufe 1 von 5");
+  await expect(page.locator("#detStats")).toContainText("Leben 8000");
+  const train = page.locator("#detTrain");
+  await expect(train).toHaveText("Trainieren: 50 Taler + 20 Trainingspunkte");
+  await train.click();
+
+  await expect(page.locator("#detStufe")).toContainText("Trainingsstufe 2 von 5");
   await expect(page.locator("#detStats")).toContainText("Leben 8640");
-  await expect(up).toHaveText("Verbessern: 100 Münzen + 40 Powerpunkte");
-  await expect(up).toBeDisabled();
-  await expect(page.locator('.tile[data-k="brecher"] .tlvl')).toHaveText("2");
+  await expect(train).toHaveText("Trainieren: 100 Taler + 40 Trainingspunkte");
+  await expect(train).toBeDisabled();
+  await expect(page.locator("#detStufe .stars i.on")).toHaveCount(2);
 
   await page.locator("#detClose").click();
+  await expect(card.locator(".tstars i.on")).toHaveCount(2);
   await page.locator("#menuBack").click();
-  await expect(page.locator("#coinCount")).toHaveText("10");
-  await expect(page.locator("#ppCount")).toHaveText("5");
+  await expect(page.locator("#talerCount")).toHaveText("10");
+  await expect(page.locator("#trainingCount")).toHaveText("5");
 });
 
-test("PWA: Manifest stimmt und das Spiel startet offline", async ({ page, context }) => {
+test("Datenschutz: keine Anfrage an einen fremden Server, Schriften kommen aus dem Spiel", async ({ page, baseURL }) => {
+  const fremd: string[] = [];
+  page.on("request", r => { if (!r.url().startsWith(new URL(baseURL!).origin) && !r.url().startsWith("data:") && !r.url().startsWith("blob:")) fremd.push(r.url()); });
+
+  await start(page, PLAYER);
+  await expectLobby(page);
+  await page.locator("#lobbySetup").click();
+  await expect(page.locator(".tile")).toHaveCount(3);
+  await page.locator("#menuBack").click();
+  await page.locator("#lobbyPlay").click();
+  await waitForPhase(page, "match");
+
+  expect(fremd).toEqual([]);
+  // Die Schriften liegen im Spiel selbst und sind geladen
+  expect(await page.evaluate(() => document.fonts.check("600 20px Fredoka"))).toBe(true);
+  expect(await page.evaluate(() => document.fonts.check("800 16px Nunito"))).toBe(true);
+  const font = await page.request.get("./fonts/fredoka-600.woff2");
+  expect(font.ok()).toBe(true);
+});
+
+test("PWA: Manifest stimmt, Lizenzen liegen im Build und das Spiel startet offline", async ({ page, context }) => {
   await start(page, PLAYER);
   const manifest = await (await page.request.get("./manifest.webmanifest")).json();
   expect(manifest.display).toBe("fullscreen");
   expect(manifest.orientation).toBe("landscape");
+
+  // Die Schriftlizenzen werden mit ausgeliefert
+  for (const file of ["OFL-Fredoka.txt", "OFL-Nunito.txt"]) {
+    const res = await page.request.get(`./licenses/${file}`);
+    expect(res.ok()).toBe(true);
+    expect(await res.text()).toContain("SIL OPEN FONT LICENSE");
+  }
 
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();
@@ -168,5 +291,5 @@ test("PWA: Manifest stimmt und das Spiel startet offline", async ({ page, contex
   await page.reload();
   await expectLobby(page);
   await expect(page.locator("#pName")).toHaveText("Testi");
-  expect(await page.evaluate(() => document.fonts.check("20px 'Lilita One'"))).toBe(true);
+  expect(await page.evaluate(() => document.fonts.check("600 20px Fredoka"))).toBe(true);
 });

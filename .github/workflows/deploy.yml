@@ -1,4 +1,4 @@
-name: Testen und auf GitHub Pages veröffentlichen
+name: Prüfen, testen und auf GitHub Pages veröffentlichen
 
 on:
   push:
@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   test:
-    name: Tests und Build
+    name: Prüfung, Tests und Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -21,6 +21,9 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # Bricht ab, wenn Begriffe, Schriften oder Anfragen an fremde Server gegen docs/RECHTLICHES.md verstoßen
+      - name: Compliance-Prüfung (Eigenständigkeit, Lizenzen, Datenschutz)
+        run: npm run check:compliance
       - name: Unit-Tests (Simulation, Bots, Fortschritt)
         run: npm test
       - name: Browser für Playwright

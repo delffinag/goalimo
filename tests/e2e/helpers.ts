@@ -3,14 +3,18 @@ import type { Game } from "../../src/game";
 
 declare global { interface Window { __game: Game } }
 
-/** Spielstand vorbelegen (Schlüssel wie in src/meta/progress.ts) und die Seite damit laden. `?debug` macht die Spielwelt erreichbar. */
-export async function start(page: Page, saved: Record<string, string> = {}): Promise<void> {
-  await page.goto("./?debug");
+/**
+ * Spielstand vorbelegen (Schlüssel wie in src/meta/progress.ts) und die Seite damit laden.
+ * `?debug` macht die Spielwelt erreichbar, `params` hängt weitere Testparameter an (z. B. `&spielzeit=4`).
+ */
+export async function start(page: Page, saved: Record<string, string> = {}, params = ""): Promise<void> {
+  await page.goto(`./?debug${params}`);
   await page.evaluate(data => { localStorage.clear(); for (const [k, v] of Object.entries(data)) localStorage.setItem(k, v); }, saved);
   await page.reload();
 }
 
-export const PLAYER = { "fgf-player": "Testi", "fgf-tut": "1" };
+/** Spieler mit Namen, Übungsrunde bereits erledigt */
+export const PLAYER = { "gl-name": "Testi", "gl-uebung": "1" };
 
 const isRotated = (page: Page) => { const v = page.viewportSize()!; return v.height > v.width; };
 
@@ -29,7 +33,7 @@ export async function stagePos(page: Page, el: Locator): Promise<{ x: number; y:
 }
 
 export async function waitForPhase(page: Page, phase: string): Promise<void> {
-  await page.waitForFunction(p => window.__game.world.phase === p, phase, { timeout: 15_000 });
+  await page.waitForFunction(p => window.__game.world.phase === p, phase, { timeout: 20_000 });
 }
 
 /** Stellt den Spieler mit Ball vor das gegnerische Tor und alle anderen weit weg. Der Schuss selbst kommt danach per Tippen. */
@@ -38,14 +42,23 @@ export async function ballInFrontOfGoal(page: Page): Promise<void> {
     const w = window.__game.world, p = w.player!;
     for (const e of w.ents) if (e !== p) { e.x = 300 + e.slot * 60; e.y = 1040; }
     p.x = 1580; p.y = 550; p.cool = 0;
-    Object.assign(w.ball, { carrier: p, last: p, x: p.x, y: p.y, vx: 0, vy: 0 });
+    Object.assign(w.ball, { carrier: p, last: p, passer: null, x: p.x, y: p.y, vx: 0, vy: 0 });
   });
 }
 
+/** Ein Tor für den Spieler: Ball vors Tor legen und tippen (tippen zielt automatisch aufs Tor) */
 export async function scoreGoal(page: Page): Promise<void> {
   await waitForPhase(page, "match");
   await ballInFrontOfGoal(page);
   await tapStage(page, 0.75, 0.5);
+}
+
+/** Bis zum Sieg spielen: Sieg gibt es bei 3 Toren */
+export async function winMatch(page: Page, goals = 3): Promise<void> {
+  for (let i = 1; i <= goals; i++) {
+    await scoreGoal(page);
+    await page.waitForFunction(n => window.__game.world.score[0] >= n, i, { timeout: 15_000 });
+  }
 }
 
 export async function expectLobby(page: Page): Promise<void> {

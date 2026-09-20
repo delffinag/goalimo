@@ -20,7 +20,7 @@ den Code aber sauber in Module aufteilen.
 - Vite + TypeScript, keine schwere Engine nötig. Das bestehende Canvas-Rendering in Module aufteilen.
 - Module: `input` (Joysticks, Super-Stick, Tastatur), `sim` (fester Takt 60 Hz, Bewegung, Kollision, Geschosse, Ball),
   `ai` (Bots inkl. Pässe), `render` (Spielfeld, Figuren, HUD), `data` (Figuren, Karten, Balancing als Daten),
-  `meta` (Lobby, Währungen, Boxen, Level, Speicherung), `ui` (DOM-Screens).
+  `meta` (Lobby, Taler/Trainingspunkte/Kristalle, Siegprämien, Trainingsstufen, Erfahrung, Speicherung), `ui` (DOM-Screens).
 - Simulation strikt getrennt vom Rendering halten, damit später ein Server die Simulation übernehmen kann (Online-Multiplayer).
 - PWA: `manifest.webmanifest` mit `"display": "fullscreen"` und `"orientation": "landscape"`, Service Worker für Offline-Start.
   Die bisherige Drehung der Ansicht per CSS im Hochformat als Rückfallebene behalten (iOS sperrt die Ausrichtung nicht).
@@ -49,7 +49,8 @@ den Code aber sauber in Module aufteilen.
 
 ## Qualitätsregeln
 - Mobile first, Querformat. Mindestens testen bei 760×320, 667×300 und hochkant 390×740 (gedrehte Ansicht).
-- Playwright-Tests für: Namenseingabe, Figur wählen, Match starten, Tor fällt, Box öffnen, Aufwerten.
+- Playwright-Tests für: Namenseingabe, Figur wählen, Match starten, Tor fällt, Siegprämie wählen, Trainieren,
+  Golden Goal, Pass-Bonus und dass keine Anfrage an einen fremden Server geht.
 - Nur die Spielfläche darf `position: fixed` als Vollbild haben (früherer Fehler: eine globale `canvas`-Regel hat alle Bilder überdeckt).
 - Keine fremden Marken, Figuren oder Grafiken verwenden. Eigenständigkeit gegenüber Brawl Stars wahren:
   keine Begriffe wie Brawl, Brawler, Brawl Ball, Power Points, Power Level, Gems, Trophies oder Boxen;

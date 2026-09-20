@@ -8,7 +8,7 @@ import { startMatch } from "../../src/sim/match";
 import { NO_INPUT, tick } from "../../src/sim/tick";
 import { createWorld, type PlayerSetup, type SimEvent } from "../../src/sim/world";
 
-const setup: PlayerSetup = { figure: "flitzer", name: "Testi", level: 1, cosmetics: { krone: false, gold: false, spur: false } };
+const setup: PlayerSetup = { figure: "flitzer", name: "Testi", stufe: 1, cosmetics: { krone: false, gold: false, spur: false } };
 
 describe("Bots", () => {
   it("spielen ein ganzes Match zu Ende, ohne dass Werte kaputtgehen", () => {
@@ -16,7 +16,8 @@ describe("Bots", () => {
       const w = createWorld(FIELD, seed);
       startMatch(w, setup);
       const events: SimEvent[] = [];
-      for (let i = 0; i < 160 / STEP && w.phase !== "end"; i++) { tick(w, STEP, NO_INPUT, botThink); events.push(...w.events.splice(0)); }
+      // Spielzeit 3:00, dazu ein mögliches Golden Goal von 60 s und die Pausen nach Toren
+      for (let i = 0; i < 300 / STEP && w.phase !== "end"; i++) { tick(w, STEP, NO_INPUT, botThink); events.push(...w.events.splice(0)); }
       expect(w.phase).toBe("end");
       expect(events.some(e => e.type === "matchEnd")).toBe(true);
       for (const e of w.ents) expect(Number.isFinite(e.x + e.y + e.hp)).toBe(true);

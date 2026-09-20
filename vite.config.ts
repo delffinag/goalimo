@@ -4,11 +4,25 @@ import { join, relative } from "node:path";
 import type { Plugin } from "vite";
 import { defineConfig } from "vitest/config";
 
+/** Legt die Lizenztexte aus licenses/ mit ins Deployment (Pflicht bei der SIL Open Font License) */
+function licenses(): Plugin {
+  return {
+    name: "goalimo-licenses",
+    apply: "build",
+    generateBundle() {
+      for (const name of readdirSync("licenses")) {
+        this.emitFile({ type: "asset", fileName: `licenses/${name}`, source: readFileSync(join("licenses", name)) });
+      }
+      this.emitFile({ type: "asset", fileName: "THIRD_PARTY_NOTICES.md", source: readFileSync("THIRD_PARTY_NOTICES.md") });
+    }
+  };
+}
+
 /** Schreibt nach dem Build dist/sw.js mit der Liste aller Dateien, die für den Offline-Start gebraucht werden */
 function serviceWorker(): Plugin {
   let outDir = "dist";
   return {
-    name: "fussballspiel-service-worker",
+    name: "goalimo-service-worker",
     apply: "build",
     configResolved(config) { outDir = config.build.outDir; },
     closeBundle() {
@@ -32,6 +46,6 @@ function serviceWorker(): Plugin {
 export default defineConfig({
   base: "./",
   build: { target: "es2022" },
-  plugins: [serviceWorker()],
+  plugins: [licenses(), serviceWorker()],
   test: { include: ["tests/unit/**/*.test.ts"] }
 });

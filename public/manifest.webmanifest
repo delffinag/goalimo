@@ -1,6 +1,6 @@
 {
-  "name": "Fußballspiel",
-  "short_name": "Fußball",
+  "name": "Goalimo",
+  "short_name": "Goalimo",
   "description": "Arena-Fußball 3 gegen 3 mit Touch-Joysticks.",
   "lang": "de",
   "start_url": ".",

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { FIGURES, scaledType } from "../../src/data/figures";
 import {
-  applyMatchResult, canUpgrade, collectItem, levelOf, loadProgress, playerSetup, rollBox, saveProgress, setPlayerName, upgrade, useBox
+  applyMatchResult, canTrainieren, epOf, loadProgress, playerSetup, praemieAngebote, saveProgress, setPlayerName,
+  stufeOf, trainieren, waehlePraemie
 } from "../../src/meta/progress";
 import { memoryStore } from "../../src/meta/storage";
 
@@ -18,61 +19,77 @@ describe("Spielername", () => {
   });
 });
 
-describe("Belohnung nach dem Match", () => {
-  it("nur ein Sieg gibt eine Box", () => {
+describe("Nach dem Match", () => {
+  it("nur ein Sieg gibt eine Siegprämie", () => {
     const p = fresh();
-    expect(applyMatchResult(p, "brecher", "draw").boxWon).toBe(false);
-    expect(applyMatchResult(p, "brecher", "loss").boxWon).toBe(false);
-    expect(p.boxes).toBe(0);
-    expect(applyMatchResult(p, "brecher", "win").boxWon).toBe(true);
-    expect(p.boxes).toBe(1);
+    expect(applyMatchResult(p, "brecher", "draw").praemieWon).toBe(false);
+    expect(applyMatchResult(p, "brecher", "loss").praemieWon).toBe(false);
+    expect(p.siegpraemien).toBe(0);
+    expect(applyMatchResult(p, "brecher", "win").praemieWon).toBe(true);
+    expect(p.siegpraemien).toBe(1);
   });
 
-  it("Niederlage kostet 3 Juwelen, aber nie unter 0", () => {
-    const p = fresh({ "fgf-gems": "5" });
-    expect(applyMatchResult(p, "brecher", "loss").gemsLost).toBe(3);
-    expect(applyMatchResult(p, "brecher", "loss").gemsLost).toBe(2);
-    expect(p.gems).toBe(0);
-    expect(applyMatchResult(p, "brecher", "loss").gemsLost).toBe(0);
+  it("Niederlage kostet 3 Kristalle, aber nie unter 0", () => {
+    const p = fresh({ "gl-kristalle": "5" });
+    expect(applyMatchResult(p, "brecher", "loss").kristalleLost).toBe(3);
+    expect(applyMatchResult(p, "brecher", "loss").kristalleLost).toBe(2);
+    expect(p.kristalle).toBe(0);
+    expect(applyMatchResult(p, "brecher", "loss").kristalleLost).toBe(0);
   });
 
-  it("Figuren-Juwelen: Sieg +8, Unentschieden +2, Niederlage −4", () => {
+  it("Erfahrung: Sieg +10, Unentschieden +5, Niederlage +2, sinkt nie", () => {
     const p = fresh();
-    expect(applyMatchResult(p, "flitzer", "win").figTotal).toBe(8);
-    expect(applyMatchResult(p, "flitzer", "draw").figTotal).toBe(10);
-    expect(applyMatchResult(p, "flitzer", "loss").figTotal).toBe(6);
-    expect(applyMatchResult(p, "schuetze", "loss").figTotal).toBe(0);
+    expect(applyMatchResult(p, "flitzer", "win").epTotal).toBe(10);
+    expect(applyMatchResult(p, "flitzer", "draw").epTotal).toBe(15);
+    expect(applyMatchResult(p, "flitzer", "loss").epTotal).toBe(17);
+    expect(epOf(p, "schuetze")).toBe(0);
   });
 });
 
-describe("Box", () => {
-  it("enthält 3 Objekte in den erlaubten Bereichen", () => {
-    const ranges = { coins: [10, 30], pp: [5, 15], gems: [1, 4] };
+describe("Siegprämie", () => {
+  it("drei offene Angebote: 40–60 Taler, 15–25 Trainingspunkte, 2–4 Kristalle", () => {
+    const spannen = { taler: [40, 60], training: [15, 25], kristalle: [2, 4] } as const;
     for (let i = 0; i < 300; i++) {
-      const items = rollBox();
-      expect(items).toHaveLength(3);
-      for (const it of items) { expect(it.n).toBeGreaterThanOrEqual(ranges[it.k][0]); expect(it.n).toBeLessThanOrEqual(ranges[it.k][1]); }
+      const angebote = praemieAngebote();
+      expect(angebote.map(a => a.k)).toEqual(["taler", "training", "kristalle"]);
+      for (const a of angebote) {
+        expect(a.n).toBeGreaterThanOrEqual(spannen[a.k][0]);
+        expect(a.n).toBeLessThanOrEqual(spannen[a.k][1]);
+      }
     }
   });
 
-  it("Kosmetik schaltet bei 10/25/45 Juwelen frei und bleibt erhalten", () => {
-    const p = fresh({ "fgf-gems": "8", "fgf-boxes": "1" });
-    expect(useBox(p)).toBe(true);
-    expect(useBox(p)).toBe(false);
-    expect(collectItem(p, { k: "gems", n: 3 }).map(r => r.id)).toEqual(["krone"]);
+  it("die Wahl bucht genau ein Angebot und verbraucht eine Prämie", () => {
+    const p = fresh();
+    applyMatchResult(p, "brecher", "win");
+    const [taler, training, kristalle] = praemieAngebote();
+    expect(waehlePraemie(p, training)).toEqual([]);
+    expect(p.training).toBe(training.n);
+    expect(p.taler).toBe(0);
+    expect(p.kristalle).toBe(0);
+    expect(p.siegpraemien).toBe(0);
+    // Ohne offene Prämie wird nichts gebucht
+    expect(waehlePraemie(p, taler)).toBeNull();
+    expect(waehlePraemie(p, kristalle)).toBeNull();
+    expect(p.taler).toBe(0);
+  });
+
+  it("Kosmetik schaltet bei 10/25/45 Kristallen frei und bleibt erhalten", () => {
+    const p = fresh({ "gl-kristalle": "8", "gl-siegpraemien": "1" });
+    expect(waehlePraemie(p, { k: "kristalle", n: 3 })!.map(r => r.id)).toEqual(["krone"]);
     for (let i = 0; i < 5; i++) applyMatchResult(p, "brecher", "loss");
-    expect(p.gems).toBe(0);
+    expect(p.kristalle).toBe(0);
     expect(playerSetup(p).cosmetics).toEqual({ krone: true, gold: false, spur: false });
   });
 });
 
-describe("Power-Level", () => {
+describe("Trainingsstufe", () => {
   it("Kosten 50/20, 100/40, 180/70, 300/100, höchstens Stufe 5", () => {
-    const p = fresh({ "fgf-coins": "630", "fgf-pp": "230" });
-    for (const lv of [2, 3, 4, 5]) { expect(upgrade(p, "brecher")).toBe(true); expect(levelOf(p, "brecher")).toBe(lv); }
-    expect([p.coins, p.pp]).toEqual([0, 0]);
-    p.coins = 999; p.pp = 999;
-    expect(canUpgrade(p, "brecher")).toBe(false);
+    const p = fresh({ "gl-taler": "630", "gl-training": "230" });
+    for (const stufe of [2, 3, 4, 5]) { expect(trainieren(p, "brecher")).toBe(true); expect(stufeOf(p, "brecher")).toBe(stufe); }
+    expect([p.taler, p.training]).toEqual([0, 0]);
+    p.taler = 999; p.training = 999;
+    expect(canTrainieren(p, "brecher")).toBe(false);
   });
 
   it("jede Stufe gibt +8 % Leben und Schaden", () => {
@@ -86,9 +103,31 @@ describe("Speicherung", () => {
   it("Fortschritt übersteht Speichern und Laden", () => {
     const store = memoryStore();
     const p = loadProgress(store);
-    setPlayerName(p, "Testi"); p.coins = 12; p.chosen = "flitzer"; p.tutDone = true; p.levels.flitzer = 2;
+    setPlayerName(p, "Testi"); p.taler = 12; p.chosen = "flitzer"; p.tutDone = true; p.stufen.flitzer = 2;
     saveProgress(store, p);
-    const q = loadProgress(store);
-    expect(q).toEqual(p);
+    expect(loadProgress(store)).toEqual(p);
+  });
+
+  it("alte Spielstände werden einmalig übernommen", () => {
+    const store = memoryStore({
+      // compliance-ok: alte Speicher-Schlüssel, nur zum Prüfen der Migration
+      "fgf-player": "Alt", "fgf-coins": "120", "fgf-pp": "45", "fgf-gems": "12", "fgf-boxes": "2",
+      "fgf-levels": '{"brecher":3}', "fgf-figgems": '{"brecher":7}', "fgf-chosen": "flitzer", "fgf-tut": "1"
+    });
+    const p = loadProgress(store);
+    expect(p.playerName).toBe("Alt");
+    expect([p.taler, p.training, p.kristalle, p.siegpraemien]).toEqual([120, 45, 12, 2]);
+    expect(stufeOf(p, "brecher")).toBe(3);
+    expect(epOf(p, "brecher")).toBe(7);
+    expect(p.chosen).toBe("flitzer");
+    expect(p.tutDone).toBe(true);
+    // 12 Kristalle schalten die Krone frei
+    expect(playerSetup(p).cosmetics.krone).toBe(true);
+
+    // Danach zählt nur noch der neue Stand: ein alter Wert überschreibt ihn nicht mehr
+    p.taler = 5;
+    saveProgress(store, p);
+    store.set("fgf-coins", "999");
+    expect(loadProgress(store).taler).toBe(5);
   });
 });
