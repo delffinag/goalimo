@@ -7,7 +7,9 @@ export const W = 1800, H = 1100;
 export const STEP = 1 / 60;
 
 // Match
+/** Fußball: Tore zum Sieg. Rugby: Versuche zum Sieg. */
 export const WIN_GOALS = 3;
+export const WIN_TRIES = 3;
 export const MATCH_TIME = 180;
 /** Bei Gleichstand nach Ablauf: Golden Goal. Fällt in dieser Zeit kein Tor, endet das Spiel unentschieden. */
 export const GOLDEN_TIME = 60;

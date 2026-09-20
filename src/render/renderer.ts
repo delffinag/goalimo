@@ -87,7 +87,7 @@ export function createRenderer(canvas: HTMLCanvasElement, stage: Stage): Rendere
       ctx.fillStyle = "#2a382f"; ctx.fillRect(0, 0, canvas.width, canvas.height);
       const k = stage.dpr * stage.scale;
       ctx.setTransform(k, 0, 0, k, -camX * k, -camY * k);
-      drawFloor(ctx);
+      drawFloor(ctx, w.mode.scoreBy);
       // Zielkreise für Bomben: gegnerische immer, eigene nur vom Spieler
       for (const l of w.lobs) if (l.team === 1 || l.owner === w.player) {
         circle(ctx, l.x1, l.y1, l.radius); ctx.fillStyle = l.team ? "rgba(63,184,240,.18)" : "rgba(255,122,47,.18)"; ctx.fill();

@@ -1,6 +1,7 @@
 import { botThink } from "./ai/bot";
 import { STEP } from "./data/balance";
 import { FIELD } from "./data/maps";
+import type { GameMode } from "./data/modes";
 import { createInput } from "./input/input";
 import { createRenderer } from "./render/renderer";
 import { startMatch, startTutorial, toMenu } from "./sim/match";
@@ -13,8 +14,8 @@ import { createStage, type Stage } from "./ui/stage";
 export interface Game {
   world: World;
   stage: Stage;
-  /** Startet ein Match, beim allerersten Mal davor die Übungsrunde */
-  play(setup: PlayerSetup, withTutorial: boolean): void;
+  /** Startet ein Match im gewählten Modus, beim allerersten Mal davor die Übungsrunde */
+  play(setup: PlayerSetup, mode: GameMode, withTutorial: boolean): void;
   skipTutorial(): void;
   toMenu(): void;
   onEvent(handler: (e: SimEvent) => void): void;
@@ -57,9 +58,9 @@ export function createGame(): Game {
 
   return {
     world, stage,
-    play(setup, withTutorial) {
+    play(setup, mode, withTutorial) {
       input.reset();
-      if (withTutorial) startTutorial(world, setup); else startMatch(world, setup);
+      if (withTutorial) startTutorial(world, setup, mode); else startMatch(world, setup, mode);
     },
     skipTutorial() { if (world.phase === "tutorial" && world.setup) { input.reset(); startMatch(world, world.setup); } },
     toMenu() { input.reset(); toMenu(world); },

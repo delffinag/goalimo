@@ -27,7 +27,7 @@ export function initEnd(app: App): (result: MatchResult) => void {
     reward.textContent = s.fresh.map(r => `${r.icon} Neue Belohnung: ${r.name}! ${r.desc}`).join(" ");
     const f = document.createElement("span"), i = document.createElement("span"), label = document.createElement("small");
     f.className = "f"; f.textContent = String(w.score[0]); i.className = "i"; i.textContent = String(w.score[1]);
-    label.textContent = w.golden ? "Tore nach Golden Goal" : "Tore";
+    label.textContent = w.golden ? `${w.mode.label} nach Verlängerung` : w.mode.label;
     $("endScore").replaceChildren(f, " : ", i, label);
     updatePraemieButtons(p);
     app.show("end");

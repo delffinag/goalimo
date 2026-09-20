@@ -53,10 +53,21 @@ export async function scoreGoal(page: Page): Promise<void> {
   await tapStage(page, 0.75, 0.5);
 }
 
+/** Rugby: den Spieler mit Ball ins gegnerische Malfeld stellen. Der nächste Tick zählt den Versuch. */
+export async function carryOverLine(page: Page): Promise<void> {
+  await waitForPhase(page, "match");
+  await page.evaluate(() => {
+    const w = window.__game.world, p = w.player!;
+    for (const e of w.ents) if (e !== p) { e.x = 300 + e.slot * 60; e.y = 1040; }
+    p.x = 1700; p.y = 550;
+    Object.assign(w.ball, { carrier: p, last: p, passer: null, x: p.x, y: p.y, vx: 0, vy: 0 });
+  });
+}
+
 /** Bis zum Sieg spielen: Sieg gibt es bei 3 Toren */
-export async function winMatch(page: Page, goals = 3): Promise<void> {
+export async function winMatch(page: Page, goals = 3, how: "kick" | "carry" = "kick"): Promise<void> {
   for (let i = 1; i <= goals; i++) {
-    await scoreGoal(page);
+    if (how === "carry") await carryOverLine(page); else await scoreGoal(page);
     await page.waitForFunction(n => window.__game.world.score[0] >= n, i, { timeout: 15_000 });
   }
 }

@@ -3,6 +3,7 @@ import { botThink } from "../../src/ai/bot";
 import { findPath } from "../../src/ai/pathfinding";
 import { STEP } from "../../src/data/balance";
 import { FIELD } from "../../src/data/maps";
+import { MODES } from "../../src/data/modes";
 import { inRect } from "../../src/sim/geometry";
 import { startMatch } from "../../src/sim/match";
 import { NO_INPUT, tick } from "../../src/sim/tick";
@@ -11,9 +12,9 @@ import { createWorld, type PlayerSetup, type SimEvent } from "../../src/sim/worl
 const setup: PlayerSetup = { figure: "flitzer", name: "Testi", stufe: 1, cosmetics: { krone: false, gold: false, spur: false } };
 
 describe("Bots", () => {
-  it("spielen ein ganzes Match zu Ende, ohne dass Werte kaputtgehen", () => {
+  it.each(["fussball", "rugby"])("spielen ein ganzes %s-Match zu Ende, ohne dass Werte kaputtgehen", modus => {
     for (const seed of [1, 2, 3]) {
-      const w = createWorld(FIELD, seed);
+      const w = createWorld(FIELD, seed, { mode: MODES[modus] });
       startMatch(w, setup);
       const events: SimEvent[] = [];
       // Spielzeit 3:00, dazu ein mögliches Golden Goal von 60 s und die Pausen nach Toren

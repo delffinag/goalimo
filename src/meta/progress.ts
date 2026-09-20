@@ -3,13 +3,14 @@ import {
   type CosmeticReward, type PraemieKind
 } from "../data/balance";
 import { clampStufe, DEFAULT_FIGURE, FIGURES } from "../data/figures";
+import { DEFAULT_MODE, MODES } from "../data/modes";
 import type { MatchResult, PlayerSetup } from "../sim/world";
 import type { Store } from "./storage";
 
 const K = {
   player: "gl-name", kristalle: "gl-kristalle", taler: "gl-taler", training: "gl-training",
   siegpraemien: "gl-siegpraemien", stufen: "gl-trainingsstufen", erfahrung: "gl-erfahrung",
-  unlocked: "gl-belohnungen", chosen: "gl-figur", tut: "gl-uebung", migriert: "gl-migriert"
+  unlocked: "gl-belohnungen", chosen: "gl-figur", modus: "gl-modus", tut: "gl-uebung", migriert: "gl-migriert"
 };
 
 /**
@@ -32,6 +33,8 @@ export interface Progress {
   erfahrung: Record<string, number>;
   unlocked: Set<string>;
   chosen: string;
+  /** Gewählter Spielmodus (Schlüssel aus data/modes.ts) */
+  modus: string;
   tutDone: boolean;
 }
 
@@ -70,7 +73,7 @@ export function migrate(store: Store): void {
 
 export function loadProgress(store: Store): Progress {
   migrate(store);
-  const chosen = store.get(K.chosen);
+  const chosen = store.get(K.chosen), modus = store.get(K.modus);
   const p: Progress = {
     playerName: (store.get(K.player) || "").trim(),
     taler: int(store.get(K.taler)), training: int(store.get(K.training)), kristalle: int(store.get(K.kristalle)),
@@ -78,6 +81,7 @@ export function loadProgress(store: Store): Progress {
     stufen: json(store.get(K.stufen), {}), erfahrung: json(store.get(K.erfahrung), {}),
     unlocked: new Set(json<string[]>(store.get(K.unlocked), [])),
     chosen: chosen && FIGURES[chosen] ? chosen : DEFAULT_FIGURE,
+    modus: modus && MODES[modus] ? modus : DEFAULT_MODE,
     tutDone: store.get(K.tut) === "1"
   };
   unlockRewards(p);
@@ -89,7 +93,8 @@ export function saveProgress(store: Store, p: Progress): void {
   store.set(K.taler, String(p.taler)); store.set(K.training, String(p.training));
   store.set(K.kristalle, String(p.kristalle)); store.set(K.siegpraemien, String(p.siegpraemien));
   store.set(K.stufen, JSON.stringify(p.stufen)); store.set(K.erfahrung, JSON.stringify(p.erfahrung));
-  store.set(K.unlocked, JSON.stringify([...p.unlocked])); store.set(K.chosen, p.chosen);
+  store.set(K.unlocked, JSON.stringify([...p.unlocked]));
+  store.set(K.chosen, p.chosen); store.set(K.modus, p.modus);
   if (p.tutDone) store.set(K.tut, "1");
 }
 

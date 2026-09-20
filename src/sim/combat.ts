@@ -3,7 +3,7 @@ import {
   SHIELD_FACTOR, SUPER_KICK_DIST, TURBO_FACTOR, W
 } from "../data/balance";
 import { teamColor } from "../data/colors";
-import { goalCenter } from "../data/maps";
+import { targetCenter } from "../data/maps";
 import { collide, visibleTo } from "./geometry";
 import { clamp, hyp, rnd } from "./math";
 import type { Kicker, Ring, World } from "./world";
@@ -108,7 +108,7 @@ export function damage(w: World, t: Kicker, amount: number, src: Kicker | null, 
 export function autoFire(w: World, b: Kicker, isSup: boolean): boolean {
   if (!b.alive) return false;
   if (w.ball.carrier === b) {
-    const g = goalCenter(1 - b.team), ang = Math.atan2(g.y - b.y, g.x - b.x);
+    const g = targetCenter(w.mode.scoreBy, b.team), ang = Math.atan2(g.y - b.y, g.x - b.x);
     return isSup ? trySuper(w, b, ang, 1) : tryAttack(w, b, ang, 1);
   }
   const T = b.T, range = (isSup && "range" in T.sup && T.sup.range) || T.range;

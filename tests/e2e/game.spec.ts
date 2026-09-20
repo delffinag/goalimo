@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ballInFrontOfGoal, expectLobby, PLAYER, scoreGoal, stagePos, start, tapStage, waitForPhase, winMatch } from "./helpers";
+import { ballInFrontOfGoal, carryOverLine, expectLobby, PLAYER, scoreGoal, stagePos, start, tapStage, waitForPhase, winMatch } from "./helpers";
 
 // Kein Test darf einen Skriptfehler auf der Seite hinterlassen
 let pageErrors: string[] = [];
@@ -31,15 +31,18 @@ test("Namenseingabe: einmalig beim ersten Start, danach fest", async ({ page }) 
   await expect(page.locator("#pName")).toHaveText("Frederik");
 });
 
-test("Lobby: Name oben links, Währungen oben rechts, Figuren links, Spielen in der Mitte", async ({ page }) => {
+test("Lobby: Name oben links, Währungen oben rechts, Figuren links, Spielmodus unten links, Spielen unten rechts", async ({ page }) => {
   await start(page, { ...PLAYER, "gl-taler": "12", "gl-training": "7", "gl-kristalle": "3" });
   await expectLobby(page);
   const name = await stagePos(page, page.locator(".namePill")), money = await stagePos(page, page.locator(".curPill"));
   const figures = await stagePos(page, page.locator("#lobbySetup")), play = await stagePos(page, page.locator("#lobbyPlay"));
+  const mode = await stagePos(page, page.locator("#modePick"));
   expect(name.x).toBeLessThan(0.3); expect(name.y).toBeLessThan(0.3);
   expect(money.x).toBeGreaterThan(0.7); expect(money.y).toBeLessThan(0.3);
   expect(figures.x).toBeLessThan(0.25); expect(Math.abs(figures.y - 0.5)).toBeLessThan(0.1);
-  expect(Math.abs(play.x - 0.5)).toBeLessThan(0.05);
+  // „Spielen“ unten rechts, Spielmodus unten links
+  expect(play.x).toBeGreaterThan(0.7); expect(play.y).toBeGreaterThan(0.7);
+  expect(mode.x).toBeLessThan(0.3); expect(mode.y).toBeGreaterThan(0.7);
   await expect(page.locator("#talerCount")).toHaveText("12");
   await expect(page.locator("#trainingCount")).toHaveText("7");
   await expect(page.locator("#kristallCount")).toHaveText("3");
@@ -174,6 +177,52 @@ test("Siegprämie: drei offene Angebote, genau eines wird gebucht, danach ist de
   await expect(page.locator("#lobbyPraemie")).toBeHidden();
 });
 
+test("Rugby: unten links wählbar, Punkt nur durch Tragen über die Linie", async ({ page }) => {
+  await start(page, PLAYER);
+  await expectLobby(page);
+  const fussball = page.locator('.mbtn[data-m="fussball"]'), rugby = page.locator('.mbtn[data-m="rugby"]');
+  await expect(fussball).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#lobbyDesc")).toContainText("ins gegnerische Tor");
+
+  await rugby.click();
+  await expect(rugby).toHaveAttribute("aria-pressed", "true");
+  await expect(fussball).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#lobbyDesc")).toContainText("über die gegnerische Linie");
+
+  // Die Wahl bleibt nach dem Neuladen bestehen
+  await page.reload();
+  await expect(page.locator('.mbtn[data-m="rugby"]')).toHaveAttribute("aria-pressed", "true");
+
+  await page.locator("#lobbyPlay").click();
+  await waitForPhase(page, "match");
+  await expect(page.locator("#sf")).toHaveText("🏉 0");
+
+  // Ein Ball, der nur im Malfeld liegt, zählt nicht
+  await page.evaluate(() => {
+    const w = window.__game.world, p = w.player!;
+    for (const e of w.ents) { e.x = 300 + e.slot * 60; e.y = 1040; }
+    p.x = 900; p.y = 1040;
+    Object.assign(w.ball, { carrier: null, last: null, passer: null, x: 1700, y: 300, vx: 0, vy: 0 });
+  });
+  await page.waitForTimeout(700);
+  await expect(page.locator("#sf")).toHaveText("🏉 0");
+
+  // Getragen zählt er
+  await carryOverLine(page);
+  await expect(page.locator("#banner")).toHaveText("Testi scored a try");
+  await expect(page.locator("#sf")).toHaveText("🏉 1");
+});
+
+test("Rugby: Sieg nach drei Versuchen, Spielstand nennt Versuche", async ({ page }) => {
+  await start(page, { ...PLAYER, "gl-modus": "rugby" });
+  await page.locator("#lobbyPlay").click();
+  await winMatch(page, 3, "carry");
+  await expect(page.locator("#end")).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator("#endTitle")).toHaveText("Sieg!");
+  await expect(page.locator("#endScore")).toContainText("3 : 0");
+  await expect(page.locator("#endScore")).toContainText("Versuche");
+});
+
 test("Golden Goal: bei 0:0 nach Ablauf, das nächste Tor beendet das Spiel", async ({ page }) => {
   // Verkürzte Spielzeit als Testparameter, damit die Verlängerung schnell erreicht ist
   await start(page, PLAYER, "&spielzeit=4&goldengoal=30");
@@ -199,7 +248,7 @@ test("Golden Goal: bei 0:0 nach Ablauf, das nächste Tor beendet das Spiel", asy
   await expect(page.locator("#end")).toBeVisible({ timeout: 10_000 });
   await expect(page.locator("#endTitle")).toHaveText("Sieg!");
   await expect(page.locator("#endScore")).toContainText("1 : 0");
-  await expect(page.locator("#endScore")).toContainText("Tore nach Golden Goal");
+  await expect(page.locator("#endScore")).toContainText("Tore nach Verlängerung");
 });
 
 test("Pass-Bonus: ein Pass lädt den Super des Passgebers um 25 %", async ({ page }) => {

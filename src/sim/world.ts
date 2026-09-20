@@ -1,6 +1,7 @@
 import {
   AIM_NOISE_ALLY, AIM_NOISE_FOE, BALL_RADIUS, GOLDEN_TIME, KICKER_RADIUS, H, MATCH_TIME, W
 } from "../data/balance";
+import { modeOf, type GameMode } from "../data/modes";
 import type { FigureType, MapDef, Point, Rect } from "../data/types";
 import { mulberry32, type Rng } from "./math";
 
@@ -62,6 +63,8 @@ export type SimEvent =
 export interface World {
   rng: Rng;
   phase: Phase;
+  /** Spielmodus: Fußball (Ball ins Tor) oder Rugby (Ball über die Linie tragen) */
+  mode: GameMode;
   map: LoadedMap;
   ents: Kicker[]; projs: Projectile[]; lobs: Lob[]; fx: Ring[]; floaters: Floater[];
   ball: Ball;
@@ -98,12 +101,12 @@ export function loadMap(def: MapDef): LoadedMap {
 const newBall = (): Ball => ({ x: W / 2, y: H / 2, vx: 0, vy: 0, r: BALL_RADIUS, carrier: null, superT: 0, last: null, passer: null });
 
 /** Verkürzte Zeiten für automatische Tests. Im Spiel gelten die Werte aus `balance`. */
-export interface WorldOptions { matchTime?: number; goldenTime?: number }
+export interface WorldOptions { matchTime?: number; goldenTime?: number; mode?: GameMode }
 
 export function createWorld(def: MapDef, seed: number = Date.now(), opts: WorldOptions = {}): World {
   const matchTime = opts.matchTime ?? MATCH_TIME, goldenTime = opts.goldenTime ?? GOLDEN_TIME;
   return {
-    rng: mulberry32(seed), phase: "menu", map: loadMap(def),
+    rng: mulberry32(seed), phase: "menu", mode: opts.mode ?? modeOf(null), map: loadMap(def),
     ents: [], projs: [], lobs: [], fx: [], floaters: [], ball: newBall(),
     score: [0, 0], timeLeft: matchTime, countdown: 0, endWait: 0, matchTime, goldenTime, golden: false,
     goalFlash: 0, goalMsg: "", matchHint: 0,

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { GOLDEN_TIME, MATCH_TIME, PROJ_SPEED, RESPAWN_TIME, STEP, W, WIN_GOALS } from "../../src/data/balance";
 import { FIGURES } from "../../src/data/figures";
-import { FIELD } from "../../src/data/maps";
+import { FIELD, GOALS, TRY_DEPTH } from "../../src/data/maps";
+import { MODES } from "../../src/data/modes";
 import { damage, tryAttack, trySuper } from "../../src/sim/combat";
 import { startMatch } from "../../src/sim/match";
 import { NO_INPUT, tick, type Brain, type PlayerInput } from "../../src/sim/tick";
@@ -178,6 +179,68 @@ describe("Pass", () => {
     run(w, 2);
     expect(w.ball.carrier).toBeNull();
     expect(p.superC).toBeLessThan(0.2);
+  });
+});
+
+describe("Rugby", () => {
+  const rugby = () => liveMatch(1, { mode: MODES.rugby });
+
+  /** Alle ausser dem Spieler weit weg, Spieler mit Ball an Position (x, y) */
+  function soloCarrier(w: World, x: number, y: number) {
+    const p = w.player!;
+    for (const e of w.ents) if (e !== p) { e.x = 900; e.y = 1000; }
+    p.x = x; p.y = y; p.cool = 0;
+    Object.assign(w.ball, { carrier: p, last: p, passer: null, x, y, vx: 0, vy: 0 });
+    return p;
+  }
+
+  it("ein Versuch zählt, wenn der Ball über die gegnerische Linie getragen wird", () => {
+    const w = rugby();
+    soloCarrier(w, W - TRY_DEPTH - 40, 550);
+    const events = run(w, 1.5, { mx: 1, my: 0, aim: null, commands: [] });
+    expect(events).toContainEqual({ type: "goal", team: 0, msg: "Testi scored a try" });
+    expect(w.score).toEqual([1, 0]);
+  });
+
+  it("ein geschossener Ball im Malfeld zählt nicht", () => {
+    const w = rugby();
+    park(w);
+    // Ball liegt frei mitten im gegnerischen Malfeld
+    Object.assign(w.ball, { carrier: null, last: null, passer: null, x: W - 60, y: 550, vx: 0, vy: 0 });
+    run(w, 2);
+    expect(w.score).toEqual([0, 0]);
+    expect(w.phase).toBe("match");
+  });
+
+  it("das eigene Malfeld gibt keinen Punkt", () => {
+    const w = rugby();
+    soloCarrier(w, TRY_DEPTH + 40, 550);
+    run(w, 1.5, { mx: -1, my: 0, aim: null, commands: [] });
+    expect(w.score).toEqual([0, 0]);
+  });
+
+  it("Sieg nach drei Versuchen", () => {
+    const w = rugby();
+    expect(w.mode.winScore).toBe(3);
+    const events: SimEvent[] = [];
+    for (let i = 1; i <= 3; i++) {
+      soloCarrier(w, W - TRY_DEPTH - 40, 550);
+      events.push(...run(w, i < 3 ? 5 : 3.5, { mx: 1, my: 0, aim: null, commands: [] }));
+      expect(w.score[0]).toBe(i);
+    }
+    expect(events).toContainEqual({ type: "matchEnd", result: "win" });
+    expect(w.phase).toBe("end");
+  });
+
+  it("im Fußball zählt weiterhin nur der Ball im Tor, nicht das Überschreiten der Linie", () => {
+    const w = liveMatch();
+    expect(w.mode.scoreBy).toBe("kick");
+    const p = soloCarrier(w, W - TRY_DEPTH - 40, 550);
+    run(w, 0.5, { mx: 1, my: 0, aim: null, commands: [] });
+    // Der Spieler hat die Rugby-Linie überlaufen, steht aber noch vor dem Tor: kein Punkt
+    expect(p.x).toBeGreaterThan(W - TRY_DEPTH);
+    expect(w.ball.x).toBeLessThan(GOALS[1].x);
+    expect(w.score).toEqual([0, 0]);
   });
 });
 

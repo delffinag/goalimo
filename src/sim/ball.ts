@@ -1,5 +1,5 @@
-import { BALL_FRICTION, COUNTDOWN_AFTER_GOAL, H, PASS_SUPER_BONUS, W, WIN_GOALS } from "../data/balance";
-import { GOALS } from "../data/maps";
+import { BALL_FRICTION, COUNTDOWN_AFTER_GOAL, H, PASS_SUPER_BONUS, W } from "../data/balance";
+import { GOALS, TRY_ZONES } from "../data/maps";
 import { ring } from "./combat";
 import { inRect } from "./geometry";
 import { clamp, hyp, rnd } from "./math";
@@ -40,6 +40,20 @@ export function updateBall(w: World, dt: number): void {
       break;
     }
   }
+  scoreCheck(w);
+}
+
+/**
+ * Fußball: der Ball muss ins Tor, egal wer ihn dorthin gebracht hat.
+ * Rugby: eine Figur muss den Ball selbst über die gegnerische Linie tragen – ein Schuss ins Malfeld zählt nicht.
+ */
+function scoreCheck(w: World): void {
+  const B = w.ball;
+  if (w.mode.scoreBy === "carry") {
+    const c = B.carrier;
+    if (c && c.alive && !c.dummy && inRect(c.x, c.y, TRY_ZONES[1 - c.team])) scoreGoal(w, c.team);
+    return;
+  }
   for (let tm = 0; tm < 2; tm++) if (inRect(B.x, B.y, GOALS[tm])) { scoreGoal(w, 1 - tm); break; }
 }
 
@@ -49,17 +63,17 @@ function passBonus(w: World, passer: Kicker): void {
   if (passer.team === 0) w.floaters.push({ x: passer.x, y: passer.y - 50, t: 0, txt: "Pass! Super +25 %", col: "#ffc83d" });
 }
 
-/** Tor für Team `tm`. Wer den Ball zuletzt berührt hat, steht in der Meldung. */
+/** Punkt für Team `tm`. Wer den Ball zuletzt berührt hat, steht in der Meldung. */
 export function scoreGoal(w: World, tm: number): void {
   w.score[tm]++;
-  const sc = w.ball.last;
-  const head = tm === 0 ? "Tor für dein Team!" : "Tor für die Gegner!";
-  w.goalMsg = !sc ? head : sc.team === tm ? `${sc.name} scored a goal` : `${sc.name} scored an own goal`;
+  const sc = w.ball.last, word = w.mode.word;
+  const head = w.mode.head[tm === 0 ? 0 : 1];
+  w.goalMsg = !sc ? head : sc.team === tm ? `${sc.name} scored a ${word}` : `${sc.name} scored an own ${word}`;
   w.goalFlash = 2.6;
   w.events.push({ type: "goal", team: tm, msg: w.goalMsg });
   resetBall(w); w.projs = []; w.lobs = [];
   for (const b of w.ents) { respawnKicker(w, b); b.cool = 0; b.pickCool = 0; }
   // Im Golden Goal beendet das erste Tor das Spiel
-  if (w.golden || w.score[tm] >= WIN_GOALS) { w.phase = "ending"; w.endWait = 1.8; }
+  if (w.golden || w.score[tm] >= w.mode.winScore) { w.phase = "ending"; w.endWait = 1.8; }
   else { w.phase = "countdown"; w.countdown = COUNTDOWN_AFTER_GOAL; }
 }

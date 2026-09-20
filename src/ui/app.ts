@@ -1,5 +1,6 @@
 import type { Game } from "../game";
 import { loadProgress, playerSetup, saveProgress, type Progress } from "../meta/progress";
+import { modeOf } from "../data/modes";
 import { localStore } from "../meta/storage";
 import { $ } from "./dom";
 import { initEnd } from "./end";
@@ -44,7 +45,7 @@ export function initApp(game: Game): App {
     play() {
       goFullscreen();
       app.show("match");
-      game.play(playerSetup(progress), !progress.tutDone);
+      game.play(playerSetup(progress), modeOf(progress.modus), !progress.tutDone);
     },
     openPraemie: () => {}
   };

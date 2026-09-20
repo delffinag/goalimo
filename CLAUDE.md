@@ -28,18 +28,23 @@ den Code aber sauber in Module aufteilen.
 - Speicherung im MVP: localStorage. Später optional Supabase (Free Tier) für Konten, damit Name und Fortschritt geräteübergreifend gelten.
 
 ## Fachliche Regeln (Stand Prototyp)
-- Nur Modus Fußball. Sieg bei 3 Toren, Spielzeit 3:00. Bei Gleichstand nach Ablauf: Golden Goal (max. 60 s), danach Unentschieden.
+- Zwei Modi, in der Lobby unten links wählbar (`src/data/modes.ts`), Spielzeit und Verlängerung gelten für beide:
+  - **Fußball**: Sieg bei 3 Toren. Der Ball muss ins gegnerische Tor, egal wer ihn dorthin gebracht hat.
+  - **Rugby**: Sieg bei 3 Versuchen. Eine Figur muss den Ball selbst über die gegnerische Linie tragen; ein
+    geschossener Ball im Malfeld zählt nicht. Das Malfeld geht über die volle Feldhöhe (`TRY_ZONES` in `data/maps.ts`).
+- Spielzeit 3:00. Bei Gleichstand nach Ablauf: Golden Goal (max. 60 s), danach Unentschieden.
 - Gelungener Pass zu einem Mitspieler lädt den Super des Passgebers um 25 %.
 - Normaler Schuss mit Ball: ca. 300 px (3 Rasenstreifen à 100 px). Super-Schuss: ca. 500 px. Ballreibung exp(-3·t).
 - Ballträger läuft mit 75 % Tempo. Wer ausgeschaltet wird, verliert den Ball. Respawn nach 5 s.
 - Geschosse fliegen mit 68 % der Basisgeschwindigkeit (Ausweichen soll möglich sein). Gegner zielen bewusst ungenau.
 - Super lädt durch Treffer und zusätzlich mit der Zeit (voll nach ca. 18 s). Super-Knopf: tippen = automatisch, ziehen = zielen.
 - Bots passen, wenn sie bedrängt werden und ein Mitspieler freier und näher am Tor steht. Kein Torwart.
-- Tor-Anzeige: „<Name> scored a goal“, bei Eigentor „<Name> scored an own goal“.
+- Punkt-Anzeige: „<Name> scored a goal“ bzw. im Rugby „<Name> scored a try“, bei einem Eigentor „… an own goal“.
 - Aktuell 3 Figuren: Rumpel (rot, hält am meisten aus), Zisch (gelb, am schnellsten), Falka (blau, größte Reichweite).
   Weitere 47 Figuren liegen im Prototyp in `ROSTER_ALL` bereit.
 - Beim ersten Start einmalig Spielernamen abfragen (2–12 Zeichen), danach nicht mehr änderbar.
-- Lobby: Name oben links, Taler/Trainingspunkte/Kristalle oben rechts, Knopf „Figuren“ links, „Spielen“ in der Mitte.
+- Lobby: Name oben links, Taler/Trainingspunkte/Kristalle oben rechts, Knopf „Figuren“ links,
+  Spielmodus unten links, „Spielen“ unten rechts.
 - Belohnung: Ein Sieg gibt eine Siegprämie. Der Spieler wählt 1 von 3 sichtbaren Angeboten
   (40–60 Taler, 15–25 Trainingspunkte oder 2–4 Kristalle). Keine Zufallsziehung, keine Boxen.
   Niederlage: −3 Kristalle (nie unter 0). Erfahrung (EP) pro Figur, steigt nur: Sieg +10, Unentschieden +5, Niederlage +2.
@@ -50,7 +55,7 @@ den Code aber sauber in Module aufteilen.
 ## Qualitätsregeln
 - Mobile first, Querformat. Mindestens testen bei 760×320, 667×300 und hochkant 390×740 (gedrehte Ansicht).
 - Playwright-Tests für: Namenseingabe, Figur wählen, Match starten, Tor fällt, Siegprämie wählen, Trainieren,
-  Golden Goal, Pass-Bonus und dass keine Anfrage an einen fremden Server geht.
+  Golden Goal, Pass-Bonus, Rugby-Modus und dass keine Anfrage an einen fremden Server geht.
 - Nur die Spielfläche darf `position: fixed` als Vollbild haben (früherer Fehler: eine globale `canvas`-Regel hat alle Bilder überdeckt).
 - Keine fremden Marken, Figuren oder Grafiken verwenden. Eigenständigkeit gegenüber Brawl Stars wahren:
   keine Begriffe wie Brawl, Brawler, Brawl Ball, Power Points, Power Level, Gems, Trophies oder Boxen;

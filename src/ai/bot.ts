@@ -1,7 +1,7 @@
 import {
   BALL_FRICTION, FOE_EXTRA_SHOOT_DELAY, H, KICK_DIST, LOB_TIME, PROJ_SPEED, SUPER_KICK_DIST, W
 } from "../data/balance";
-import { goalCenter, LANES } from "../data/maps";
+import { LANES, targetCenter } from "../data/maps";
 import type { Point } from "../data/types";
 import { kick, moveEnt, tryAttack, trySuper } from "../sim/combat";
 import { los, losWide, visibleTo } from "../sim/geometry";
@@ -37,9 +37,9 @@ function holdPoint(b: Kicker): Point {
   return { x: b.team ? W - 800 : 800, y: LANES[b.slot] };
 }
 
-/** Passen, wenn der Bot bedrängt wird und ein Mitspieler freier und näher am Tor steht */
+/** Passen, wenn der Bot bedrängt wird und ein Mitspieler freier und näher am Ziel steht */
 function tryPass(w: World, b: Kicker, goalDist: number, foes: Kicker[]): boolean {
-  const eg = goalCenter(1 - b.team);
+  const eg = targetCenter(w.mode.scoreBy, b.team);
   let best: Kicker | null = null, bs = 0;
   for (const m of w.ents) {
     if (m === b || !m.alive || m.team !== b.team) continue;
@@ -61,7 +61,7 @@ function tryPass(w: World, b: Kicker, goalDist: number, foes: Kicker[]): boolean
 type BallPlan = { carry: true } | { carry: false; m: Vec; tgt?: Kicker };
 
 function ballBrain(w: World, b: Kicker, tgt: Kicker | null, bd: number, canHit: boolean, dt: number): BallPlan {
-  const B = w.ball, eg = goalCenter(1 - b.team);
+  const B = w.ball, eg = targetCenter(w.mode.scoreBy, b.team);
   if (B.carrier === b) {
     const [mx, my] = dirTo(w, b, eg);
     moveEnt(w, b, mx, my, dt);
@@ -73,6 +73,8 @@ function ballBrain(w: World, b: Kicker, tgt: Kicker | null, bd: number, canHit: 
     const pressed = foes.some(e => hyp(e.x - b.x, e.y - b.y) < 260);
     if ((pressed || w.rng() < 0.012) && b.ai.passWait <= 0 && b.cool <= 0 && d > KICK_DIST - 20 && tryPass(w, b, d, foes))
       return { carry: true };
+    // Im Rugby zählt nur das Tragen: der Ballträger schießt nie aufs Ziel, er läuft und passt
+    if (w.mode.scoreBy === "carry") return { carry: true };
     if (d < SUPER_KICK_DIST - 20 && d > KICK_DIST - 20 && b.superC >= 1 && los(w.map, b, eg)) trySuper(w, b, ang + rnd(w.rng, -0.05, 0.05), 1);
     else if (d < KICK_DIST - 20 && los(w.map, b, eg)) tryAttack(w, b, ang + rnd(w.rng, -0.08, 0.08), 1);
     return { carry: true };

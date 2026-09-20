@@ -53,10 +53,14 @@
     <div class="lcenter">
       <h1 class="display">Goalimo</h1>
       <div class="linfo" id="lobbyInfo"></div>
-      <p class="sub">Fußball 3 gegen 3: Bring den Ball ins gegnerische Tor. Wer zuerst 3 Tore schießt, gewinnt.</p>
-      <button class="big" id="lobbyPlay">Spielen</button>
+      <p class="sub" id="lobbyDesc"></p>
       <button class="ghost" id="lobbyPraemie" hidden>Prämie wählen</button>
     </div>
+    <div class="modePick" id="modePick" role="group" aria-label="Spielmodus wählen">
+      <span class="mlabel">Spielmodus</span>
+      <div class="mbtns" id="modeBtns"></div>
+    </div>
+    <button class="big playBtn" id="lobbyPlay">Spielen</button>
   </div>
 
   <div id="menu" class="overlay figs" hidden>

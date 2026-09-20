@@ -33,8 +33,15 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 
 ## Spielregeln (Kurzfassung)
 
-- Fußball 3 gegen 3, Sieg bei **3 Toren**, Spielzeit **3:00**.
-- Gleichstand nach Ablauf: **Golden Goal**, höchstens 60 s. Fällt kein Tor, endet das Spiel unentschieden.
+3 gegen 3, zwei Modi, in der Lobby unten links wählbar:
+
+| Modus | Punkt | Sieg |
+| --- | --- | --- |
+| **Fußball** | Der Ball muss ins gegnerische Tor. | 3 Tore |
+| **Rugby** | Eine Figur muss den Ball selbst über die gegnerische Linie tragen – geschossen zählt nicht. | 3 Versuche |
+
+- Spielzeit **3:00**.
+- Gleichstand nach Ablauf: **Golden Goal**, höchstens 60 s. Fällt kein Punkt, endet das Spiel unentschieden.
 - Ein **gelungener Pass** lädt den Super des Passgebers um 25 %.
 - Ein Sieg gibt eine **Siegprämie**: drei offene Angebote (40–60 Taler, 15–25 Trainingspunkte, 2–4 Kristalle),
   der Spieler wählt genau eines. Keine Zufallsziehung, kein Kauf mit echtem Geld.
@@ -46,7 +53,7 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 
 | Modul | Aufgabe |
 | --- | --- |
-| `src/data` | Figuren, Karte und Balancing als Daten. Zahlen ändert man hier, nicht im Code. |
+| `src/data` | Figuren, Karte, Spielmodi und Balancing als Daten. Zahlen ändert man hier, nicht im Code. |
 | `src/sim` | Simulation im festen Takt (60 Hz): Bewegung, Kollision, Geschosse, Ball, Tore, Übungsrunde. Kein DOM, eigene Zufallsquelle. |
 | `src/ai` | Bots: Wegfindung, Pässe, bewusst ungenaues Zielen. |
 | `src/input` | Joysticks, Super-Stick, Tastatur, Maus. Liefert pro Tick eine `PlayerInput`. |

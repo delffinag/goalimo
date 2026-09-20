@@ -1,6 +1,7 @@
 import { H, W } from "../data/balance";
-import { GOALS } from "../data/maps";
+import { GOALS, TRY_ZONES } from "../data/maps";
 import { mulberry32, rnd } from "../sim/math";
+import type { ScoreBy } from "../data/modes";
 import type { LoadedMap, World } from "../sim/world";
 import { circle, roundRect, type Ctx } from "./draw";
 
@@ -24,20 +25,42 @@ function bushBlobs(map: LoadedMap): Blob[][] {
   return all;
 }
 
-/** Rasen mit Streifen à 100 px, Linien und Tore */
-export function drawFloor(ctx: Ctx): void {
-  ctx.fillStyle = "#7fbf66"; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#74b45b";
-  for (let x = 100; x < W; x += 200) ctx.fillRect(x, 0, 100, H);
-  ctx.strokeStyle = "rgba(255,255,255,.65)"; ctx.lineWidth = 6; ctx.strokeRect(3, 3, W - 6, H - 6);
-  ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
-  circle(ctx, W / 2, H / 2, 110); ctx.stroke();
+/** Tore mit Netz (Fußball) */
+function drawGoals(ctx: Ctx): void {
   GOALS.forEach((g, i) => {
     ctx.fillStyle = i ? "rgba(63,184,240,.5)" : "rgba(255,122,47,.5)"; ctx.fillRect(g.x, g.y, g.w, g.h);
     ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 2;
     for (let yy = g.y + 16; yy < g.y + g.h; yy += 16) { ctx.beginPath(); ctx.moveTo(g.x, yy); ctx.lineTo(g.x + g.w, yy); ctx.stroke(); }
     for (let xx = g.x + 12; xx < g.x + g.w; xx += 12) { ctx.beginPath(); ctx.moveTo(xx, g.y); ctx.lineTo(xx, g.y + g.h); ctx.stroke(); }
   });
+}
+
+/** Malfelder über die volle Höhe mit dicker Mallinie (Rugby) */
+function drawTryZones(ctx: Ctx): void {
+  TRY_ZONES.forEach((z, i) => {
+    ctx.fillStyle = i ? "rgba(63,184,240,.22)" : "rgba(255,122,47,.22)";
+    ctx.fillRect(z.x, z.y, z.w, z.h);
+    // Schraffur, damit das Malfeld auch ohne Farbe erkennbar ist
+    ctx.save();
+    ctx.beginPath(); ctx.rect(z.x, z.y, z.w, z.h); ctx.clip();
+    ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.lineWidth = 8;
+    for (let d = -H; d < z.w + H; d += 56) { ctx.beginPath(); ctx.moveTo(z.x + d, z.y); ctx.lineTo(z.x + d + H, z.y + H); ctx.stroke(); }
+    ctx.restore();
+    const line = i ? z.x : z.x + z.w;
+    ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(line, 0); ctx.lineTo(line, H); ctx.stroke();
+  });
+}
+
+/** Rasen mit Streifen à 100 px, Linien und – je nach Modus – Tore oder Malfelder */
+export function drawFloor(ctx: Ctx, scoreBy: ScoreBy): void {
+  ctx.fillStyle = "#7fbf66"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#74b45b";
+  for (let x = 100; x < W; x += 200) ctx.fillRect(x, 0, 100, H);
+  ctx.strokeStyle = "rgba(255,255,255,.65)"; ctx.lineWidth = 6; ctx.strokeRect(3, 3, W - 6, H - 6);
+  ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
+  circle(ctx, W / 2, H / 2, 110); ctx.stroke();
+  if (scoreBy === "carry") drawTryZones(ctx); else drawGoals(ctx);
 }
 
 export function drawWalls(ctx: Ctx, map: LoadedMap): void {

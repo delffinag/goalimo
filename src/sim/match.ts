@@ -2,6 +2,7 @@ import { COUNTDOWN_AFTER_GOAL, COUNTDOWN_START, H } from "../data/balance";
 import { FIGURE_KEYS, FIGURES, scaledType } from "../data/figures";
 import { collide } from "./geometry";
 import { clamp, shuffled } from "./math";
+import type { GameMode } from "../data/modes";
 import { makeKicker, resetBall, respawnKicker, type MatchResult, type PlayerSetup, type World } from "./world";
 
 function resetWorld(w: World): void {
@@ -9,18 +10,18 @@ function resetWorld(w: World): void {
 }
 
 /** Übungsrunde vor dem ersten Match: laufen, schießen, Busch, Super */
-export function startTutorial(w: World, setup: PlayerSetup): void {
+export function startTutorial(w: World, setup: PlayerSetup, mode: GameMode = w.mode): void {
   resetWorld(w);
-  w.setup = setup; w.phase = "tutorial";
+  w.setup = setup; w.mode = mode; w.phase = "tutorial";
   w.player = makeKicker(w, scaledType(setup.figure, setup.stufe), 0, 1, setup);
   w.ents = [w.player];
   w.tut = { step: 0, moved: 0, hits: 0, superUsed: false, doneT: 0 };
 }
 
 /** 3 gegen 3: Der Spieler bekommt die zwei anderen Figuren als Mitspieler, die Gegner sind zufällig aufgestellt. */
-export function startMatch(w: World, setup: PlayerSetup): void {
+export function startMatch(w: World, setup: PlayerSetup, mode: GameMode = w.mode): void {
   resetWorld(w);
-  w.setup = setup; w.matchHint = 5;
+  w.setup = setup; w.mode = mode; w.matchHint = 5;
   const player = makeKicker(w, scaledType(setup.figure, setup.stufe), 0, 0, setup);
   const allies = shuffled(w.rng, FIGURE_KEYS.filter(t => t !== setup.figure));
   const foes = shuffled(w.rng, FIGURE_KEYS);
@@ -37,7 +38,7 @@ export function startGoldenGoal(w: World): void {
   w.projs = []; w.lobs = [];
   resetBall(w);
   for (const b of w.ents) { respawnKicker(w, b); b.cool = 0; b.pickCool = 0; }
-  w.goalMsg = "Golden Goal!"; w.goalFlash = 2.6;
+  w.goalMsg = w.mode.goldenLabel; w.goalFlash = 2.6;
   w.phase = "countdown"; w.countdown = COUNTDOWN_AFTER_GOAL;
   w.events.push({ type: "goldenGoal" });
 }

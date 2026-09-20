@@ -1,14 +1,13 @@
 import { playing, type World } from "../sim/world";
 import { $ } from "./dom";
 
+// Die letzte Zeile und der Match-Hinweis hängen am Spielmodus (siehe data/modes.ts)
 const TUT_TEXT = [
   "Zieh links auf dem Bildschirm, um zu laufen.<small>Am Computer: WASD</small>",
   "Tipp rechts: Du schießt automatisch auf die Zielscheibe.<small>Rechts ziehen und loslassen zielt selbst. Zu weit weg? Geh näher ran.</small>",
   "Versteck dich im Busch. Dort sehen dich Gegner erst aus der Nähe.",
-  "Dein Super ist geladen. Drück den gelben Knopf.<small>Am Computer: Leertaste</small>",
-  "Stark. Jetzt Fußball: Lauf in den Ball, um ihn zu führen. Schießen kickt ihn. Wer zuerst 3 Tore schießt, gewinnt."
+  "Dein Super ist geladen. Drück den gelben Knopf.<small>Am Computer: Leertaste</small>"
 ];
-const MATCH_HINT = "Lauf in den Ball, um ihn zu führen. Schießen kickt ihn aufs Tor.<small>Ein Pass zu einem Mitspieler lädt deinen Super um 25 %. Wirst du ausgeschaltet, verlierst du den Ball.</small>";
 
 export interface Hud { update(w: World): void }
 
@@ -26,7 +25,7 @@ export function createHud(): Hud {
       skip.hidden = !tutorial;
       superBtn.hidden = !(inMatch || tutorial);
       if (inMatch) {
-        sf.textContent = "⚽ " + w.score[0]; si.textContent = "⚽ " + w.score[1];
+        sf.textContent = `${w.mode.icon} ${w.score[0]}`; si.textContent = `${w.mode.icon} ${w.score[1]}`;
         const t = Math.ceil(w.timeLeft);
         timer.textContent = `${(t / 60) | 0}:${String(t % 60).padStart(2, "0")}`;
         // Verlängerung: goldene Uhr, das nächste Tor entscheidet
@@ -34,7 +33,7 @@ export function createHud(): Hud {
       }
       const hint = w.matchHint > 0 && (w.phase === "match" || w.phase === "countdown");
       tut.hidden = !(tutorial || hint);
-      if (tutorial) setTut(TUT_TEXT[w.tut.step]); else if (hint) setTut(MATCH_HINT);
+      if (tutorial) setTut(TUT_TEXT[w.tut.step] ?? w.mode.tutorial); else if (hint) setTut(w.mode.hint);
 
       const p = w.player;
       let text = "";
