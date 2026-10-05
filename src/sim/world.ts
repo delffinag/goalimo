@@ -8,7 +8,8 @@ import { mulberry32, type Rng } from "./math";
 export type Phase = "menu" | "tutorial" | "countdown" | "match" | "ending" | "end";
 export type MatchResult = "win" | "draw" | "loss";
 
-export interface Cosmetics { krone: boolean; gold: boolean; spur: boolean }
+/** Krone, Goldrand und Funkenspur kommen über Kristall-Schwellen, Brille, Leuchtring und Torfeuerwerk aus dem Shop */
+export interface Cosmetics { krone: boolean; gold: boolean; spur: boolean; brille: boolean; schein: boolean; feuerwerk: boolean }
 
 /** Womit der Spieler ins Match geht. Kommt aus `meta`, die Simulation kennt keine Speicherung. */
 export interface PlayerSetup { figure: string; name: string; stufe: number; cosmetics: Cosmetics }

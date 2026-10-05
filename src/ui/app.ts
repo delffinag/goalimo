@@ -11,10 +11,11 @@ import { initFigures } from "./figures";
 import { initLobby } from "./lobby";
 import { initPath } from "./path";
 import { initPraemie } from "./praemie";
+import { initShop } from "./shop";
 import { initSummary } from "./summary";
 import { initWelcome } from "./welcome";
 
-export type Screen = "welcome" | "lobby" | "figures" | "path" | "praemie" | "end" | "summary" | "match";
+export type Screen = "welcome" | "lobby" | "figures" | "shop" | "path" | "praemie" | "end" | "summary" | "match";
 
 /** Was jeder Screen braucht: Spiel, Fortschritt, laufende Sitzung, Speichern und Navigation */
 export interface App {
@@ -31,7 +32,7 @@ export interface App {
 }
 
 const OVERLAYS: Record<Exclude<Screen, "match">, string> = {
-  welcome: "welcome", lobby: "lobby", figures: "menu", path: "pathView", praemie: "praemieView",
+  welcome: "welcome", lobby: "lobby", figures: "menu", shop: "shopView", path: "pathView", praemie: "praemieView",
   end: "end", summary: "summary"
 };
 
@@ -79,6 +80,7 @@ export function initApp(game: Game): App {
   initWelcome(app);
   enter.lobby = initLobby(app);
   enter.figures = initFigures(app);
+  enter.shop = initShop(app);
   enter.path = initPath(app);
   app.openPraemie = initPraemie(app);
   const showEnd = initEnd(app);

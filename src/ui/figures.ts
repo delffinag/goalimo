@@ -38,7 +38,7 @@ export function initFigures(app: App): () => void {
   let detailKey = p.chosen;
 
   // Karte: helle Fläche, oben ein Farbband, rundes Medaillon mit Porträt, Name, Stärke als Pille, unten Sterne und EP
-  for (const k of FIGURE_KEYS) {
+  function makeTile(k: string): HTMLElement {
     const T = FIGURES[k];
     const tile = document.createElement("button");
     tile.className = "tile"; tile.dataset.k = k;
@@ -49,9 +49,16 @@ export function initFigures(app: App): () => void {
     tile.querySelector(".tname")!.textContent = T.name;
     tile.querySelector(".tstr")!.textContent = T.strength;
     tile.addEventListener("click", () => { if (!scroll.dragged()) openDetail(k); });
-    cards.append(tile);
+    return tile;
   }
-  $("figCount").textContent = `(${FIGURE_KEYS.length})`;
+
+  /** Nur Figuren, die der Spieler besitzt. Weitere gibt es im Shop. */
+  function buildTiles(): void {
+    const own = FIGURE_KEYS.filter(k => p.figuren.has(k));
+    cards.replaceChildren(...own.map(makeTile));
+    $("figCount").textContent = `(${own.length})`;
+    $("figShop").hidden = own.length === FIGURE_KEYS.length;
+  }
 
   function refreshTiles(): void {
     for (const tile of cards.children as HTMLCollectionOf<HTMLElement>) {
@@ -97,11 +104,13 @@ export function initFigures(app: App): () => void {
   $("detClose").addEventListener("click", () => { modal.hidden = true; });
   $("play").addEventListener("click", () => { pick(); modal.hidden = true; app.play(); });
   $("menuBack").addEventListener("click", () => app.show("lobby"));
+  $("figShop").addEventListener("click", () => app.show("shop"));
 
   const scroll = dragScroll(cards, app.game.stage);
 
   return function enter() {
     modal.hidden = true;
+    buildTiles();
     refreshTiles();
     // Porträts erst zeichnen, wenn die Karten sichtbar sind und eine Größe haben
     requestAnimationFrame(() => {

@@ -95,7 +95,7 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
   padding:8px 14px; width:100%; max-width:280px; text-align:center; -webkit-user-select:text; user-select:text; margin:6px 0 12px; }
 #welcome input:focus{ outline:none; border-color:var(--fire); }
 
-/* Lobby: Name oben links, Währungen oben rechts, „Figuren“ links, Spielmodus unten links, „Spielen“ unten rechts */
+/* Lobby: Name oben links, Währungen und darunter „Shop“ oben rechts, „Figuren“ links, Spielmodus unten links, „Spielen“ unten rechts */
 .lobby{ display:block; padding:0; }
 .topPill{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); left:calc(env(safe-area-inset-left,0px) + 12px);
   display:flex; align-items:center; gap:8px; background:rgba(0,0,0,.6); color:#fff; border-radius:14px; padding:6px 16px 7px 12px;
@@ -125,6 +125,11 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
   background:var(--panel); color:var(--ink); border:0; border-radius:18px; padding:16px 8px; display:flex; flex-direction:column; align-items:center; gap:2px;
   font-family:var(--display); font-weight:600; font-size:20px; box-shadow:0 5px 0 rgba(0,0,0,.3); cursor:pointer; }
 .figBtn:active{ transform:translateY(calc(-50% + 3px)); box-shadow:0 2px 0 rgba(0,0,0,.3); }
+/* Oben rechts unter den Währungen: der Shop */
+.shopBtn{ position:absolute; right:calc(env(safe-area-inset-right,0px) + 12px); top:calc(env(safe-area-inset-top,0px) + 58px);
+  border:0; border-radius:14px; padding:7px 22px 8px; cursor:pointer; background:var(--accent); color:#3a2300;
+  font-family:var(--display); font-weight:600; font-size:18px; box-shadow:0 4px 0 #c98f00; }
+.shopBtn:active{ transform:translateY(2px); box-shadow:0 2px 0 #c98f00; }
 /* Mitte: nur der Spielname, keine Karte mehr */
 .lcenter{ position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); display:flex; flex-direction:column;
   align-items:center; gap:10px; text-align:center; pointer-events:none; }
@@ -162,6 +167,7 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .figs .panel.figPanel{ width:min(900px,100%); height:100%; display:flex; flex-direction:column; padding:12px 14px; text-align:left; }
 .figHead{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
 .figHead h2{ margin:0; font-size:24px; } .figHead h2 span{ color:var(--muted); font-size:17px; } .figHead .ghost{ margin:0; }
+.figHeadBtns{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
 .tiles{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-content:start; flex:1; min-height:0; overflow-y:auto; touch-action:none;
   padding:6px 6px 10px 6px; overscroll-behavior:contain; }
 .tile{ position:relative; background:var(--card); border:2px solid var(--line); border-radius:16px; padding:0 8px 8px; cursor:pointer;
@@ -224,6 +230,35 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .item .kristall{ width:16px; height:18px; margin:0 3px; }
 .item .taler, .item .training{ margin-left:0; }
 @keyframes pop{ from{ transform:scale(.4); opacity:0; } }
+
+/* ---------- Shop: feste Preise in Spielwährung, alles offen sichtbar ---------- */
+.shopPanel{ width:min(820px,100%); height:100%; display:flex; flex-direction:column; padding:12px 16px; text-align:left; }
+.shopHead{ display:flex; align-items:center; gap:12px; }
+.shopHead h1{ margin:0; font-size:26px; } .shopHead .ghost{ margin:0 0 0 auto; }
+.shopCur{ display:flex; align-items:center; gap:4px; font-family:var(--display); font-weight:600; font-size:17px; }
+.shopCur b{ margin-right:8px; }
+.shopCur .taler, .shopCur .training{ width:19px; height:19px; } .shopCur .kristall{ width:16px; height:18px; margin:0 2px; }
+.shopPanel .sub{ margin:2px 0 6px; min-height:1.2em; font-size:14px; }
+.shopBody{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:none; }
+.ssec h2{ margin:6px 0 6px; font-size:19px; }
+.sgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-bottom:8px; }
+.scard{ display:flex; flex-direction:column; align-items:center; gap:3px; background:var(--card); border:2px solid var(--line); border-radius:16px;
+  padding:10px 8px; text-align:center; }
+.scard[data-state="besessen"], .scard[data-state="heuteGekauft"]{ opacity:.6; }
+.spic{ display:flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:var(--panel);
+  font-size:28px; line-height:1; overflow:hidden; }
+.spic:has(canvas){ background:var(--c); border:3px solid #fff; }
+.spic canvas{ width:100%; height:100%; display:block; }
+.spic .taler, .spic .training{ width:32px; height:32px; margin:0; font-size:18px; } .spic .kristall{ width:28px; height:32px; margin:0; }
+.sname{ font-family:var(--display); font-weight:600; font-size:16px; line-height:1.15; }
+.scard small{ font:600 12px var(--text); color:var(--muted); line-height:1.25; flex:1; }
+.sbuy{ display:inline-flex; align-items:center; gap:5px; margin-top:4px; border:0; border-radius:12px; padding:5px 14px 6px; cursor:pointer;
+  background:var(--accent); color:#3a2300; font:800 14px var(--text); box-shadow:0 3px 0 #c98f00; }
+.sbuy b{ font-family:var(--display); font-weight:600; font-size:17px; }
+.sbuy .taler, .sbuy .training{ width:18px; height:18px; margin:0; font-size:11px; } .sbuy .kristall{ width:14px; height:16px; margin:0; }
+.sbuy:active{ transform:translateY(2px); box-shadow:0 1px 0 #c98f00; }
+.sbuy:disabled{ background:var(--line); color:var(--muted); box-shadow:none; cursor:default; transform:none; }
+.scard[data-state="zuTeuer"] .sbuy:disabled{ opacity:.7; }
 
 /* Nach dem Match: Stand der laufenden Sitzung, noch nicht gutgeschrieben */
 .tally{ background:var(--card); border-radius:14px; padding:8px 14px 10px; margin:0 auto 12px; max-width:420px; }
@@ -294,6 +329,9 @@ button:focus-visible{ outline:3px solid var(--ice); outline-offset:3px; }
 .short .station::before{ left:14px; }
 .short .mbtn{ padding:5px 10px 6px; font-size:13px; } .short .modePick .mlabel{ font-size:10px; }
 .short .figHead h2{ font-size:21px; }
+.short .shopHead h1{ font-size:22px; } .short .sgrid{ grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:8px; }
+.short .scard{ padding:7px 6px; } .short .spic{ width:42px; height:42px; font-size:22px; } .short .sname{ font-size:14px; }
+.short .shopBtn{ top:calc(env(safe-area-inset-top,0px) + 48px); padding:5px 16px 6px; font-size:15px; }
 .short .tile .tmedal{ width:62px; height:62px; } .short .tile .tname{ font-size:15px; }
 .short .offers{ gap:8px; } .short .offer{ padding:8px 4px; } .short .offer .n{ font-size:20px; }
 .short #endScore{ font-size:32px; margin:0 0 6px; } .short .endInfo{ font-size:16px; margin-bottom:6px; }

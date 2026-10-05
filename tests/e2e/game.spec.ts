@@ -105,6 +105,56 @@ test("Figurenkarte: Farbband, Medaillon, Name, Stärke, Sterne und EP, Häkchen 
   await expect(page.locator("#lobbyFigure")).toContainText("Zisch");
 });
 
+test("Shop: Figur, Kosmetik, Tausch und Tagesangebot mit Spielwährung kaufen, keine Medaillen", async ({ page }) => {
+  await start(page, { ...PLAYER, "gl-taler": "450", "gl-training": "100", "gl-kristalle": "21" });
+  await expectLobby(page);
+  const shopBtn = await stagePos(page, page.locator("#lobbyShop")), money = await stagePos(page, page.locator(".curPill"));
+  // Der Shop sitzt oben rechts direkt unter den Währungen
+  expect(shopBtn.x).toBeGreaterThan(0.7); expect(shopBtn.y).toBeGreaterThan(money.y); expect(shopBtn.y).toBeLessThan(0.35);
+  await page.locator("#lobbyShop").click();
+  await expect(page.locator("#shopView")).toBeVisible();
+  await expect(page.locator(".ssec h2")).toHaveText(["Tagesangebote", "Figuren", "Kosmetik", "Tausch"]);
+  await expect(page.locator('.ssec[data-bereich="tag"] .scard')).toHaveCount(3);
+  await expect(page.locator("#shopView")).not.toContainText("Medaille");
+  await expect(page.locator("#shopView")).not.toContainText(/€|EUR|CHF/);
+
+  // Figur kaufen: 300 Taler, danach „Gehört dir“
+  const kabumm = page.locator('.scard[data-id="figur-werfer"]');
+  await expect(page.locator('.scard[data-id="figur-mauli"]')).toHaveAttribute("data-state", "zuTeuer");
+  await kabumm.locator(".sbuy").click();
+  await expect(kabumm).toHaveAttribute("data-state", "besessen");
+  await expect(kabumm.locator(".sbuy")).toHaveText("Gehört dir");
+  await expect(page.locator("#shopTaler")).toHaveText("150");
+  await expect(page.locator("#shopNote")).toContainText("Kabumm gehört jetzt dir");
+
+  // Kosmetik für Kristalle, Tausch beliebig oft
+  await page.locator('.scard[data-id="kosmetik-brille"] .sbuy').click();
+  await expect(page.locator("#shopKristalle")).toHaveText("6");
+  await page.locator('.scard[data-id="tausch-taler"] .sbuy').click();
+  await expect(page.locator("#shopKristalle")).toHaveText("1");
+  await expect(page.locator("#shopTaler")).toHaveText("270");
+  await expect(page.locator('.scard[data-id="tausch-taler"]')).toHaveAttribute("data-state", "zuTeuer");
+
+  // Ein Tagesangebot gibt es nur einmal am Tag
+  const tag = page.locator('.ssec[data-bereich="tag"] .scard[data-state="kaufbar"]').first();
+  const id = await tag.getAttribute("data-id");
+  await tag.locator(".sbuy").click();
+  await expect(page.locator(`.scard[data-id="${id}"]`)).toHaveAttribute("data-state", "heuteGekauft");
+
+  // Die neue Figur steht in der Figurenauswahl, alles bleibt nach dem Neuladen erhalten
+  await page.locator("#shopBack").click();
+  await page.locator("#lobbySetup").click();
+  await expect(page.locator(".tile")).toHaveCount(4);
+  await page.locator('.tile[data-k="werfer"]').click();
+  await page.locator("#detPick").click();
+  await page.locator("#menuBack").click();
+  await expect(page.locator("#lobbyFigure")).toContainText("Kabumm");
+  await expect(page.locator("#medalCount")).toHaveText("0");
+  await page.reload();
+  await expect(page.locator("#lobbyFigure")).toContainText("Kabumm");
+  expect(await page.evaluate(() => localStorage.getItem("gl-belohnungen"))).toContain("brille");
+});
+
 test("Match starten: erst Übungsrunde, dann Anstoß mit 3:00 auf der Uhr", async ({ page }) => {
   await start(page, { "gl-name": "Testi" });
   await page.locator("#lobbyPlay").click();

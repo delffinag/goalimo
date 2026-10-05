@@ -107,12 +107,18 @@ export function descSup(u: SuperSpec): string {
   }
 }
 
-// Aktuelle Aufstellung: 3 Figuren, jede mit eigener Farbe und Stärke (weitere liegen in ROSTER_ALL bereit)
+// Aktuelle Aufstellung: 3 Startfiguren und 3 Figuren aus dem Shop, jede mit eigener Farbe und Stärke
+// (weitere liegen in ROSTER_ALL bereit)
 const LINEUP: [key: string, color: string, strength: string][] = [
   ["brecher", "#e53935", "Hält am meisten aus"],
   ["flitzer", "#fdd835", "Am schnellsten"],
-  ["schuetze", "#1e88e5", "Größte Reichweite"]
+  ["schuetze", "#1e88e5", "Größte Reichweite"],
+  ["werfer", "#43a047", "Wirft über Mauern"],
+  ["heilerin", "#ec407a", "Heilt das Team"],
+  ["mauli", "#8d6e63", "Schild gegen Schaden"]
 ];
+/** Diese Figuren hat jeder von Anfang an, die übrigen gibt es im Shop */
+export const STARTER_FIGURES = ["brecher", "flitzer", "schuetze"];
 
 export const FIGURES: Record<string, FigureType> = {};
 for (const [k, color, strength] of LINEUP) {

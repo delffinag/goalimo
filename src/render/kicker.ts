@@ -42,14 +42,27 @@ export function drawKicker(ctx: Ctx, b: Kicker): void {
   if (b.isPlayer) { ctx.strokeStyle = "#ffc83d"; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(b.x, b.y + b.r * 0.8, b.r + 8, b.r * 0.55, 0, 0, Math.PI * 2); ctx.stroke(); }
   drawWeapon(ctx, b);
   const goldRim = !!b.cosmetics?.gold, crowned = !!b.cosmetics?.krone;
+  if (b.cosmetics?.schein) {
+    // Leuchtring aus dem Shop: ein heller Schein rund um die Figur
+    circle(ctx, b.x, b.y, b.r + 13); ctx.fillStyle = "rgba(255,240,170,.35)"; ctx.fill();
+    circle(ctx, b.x, b.y, b.r + 10); ctx.lineWidth = 3; ctx.strokeStyle = "#ffe98a"; ctx.stroke();
+  }
   circle(ctx, b.x, b.y, b.r); ctx.fillStyle = col; ctx.fill(); ctx.lineWidth = goldRim ? 5 : 4; ctx.strokeStyle = goldRim ? "#ffd23f" : dark; ctx.stroke();
   if (goldRim) { circle(ctx, b.x, b.y, b.r + 5); ctx.lineWidth = 2; ctx.strokeStyle = "rgba(255,210,63,.55)"; ctx.stroke(); }
   drawAccessory(ctx, b, crowned);
   if (b.shieldT > 0) { circle(ctx, b.x, b.y, b.r + 9); ctx.lineWidth = 4; ctx.strokeStyle = "rgba(128,216,255,.85)"; ctx.stroke(); }
   if (b.turboT > 0) { circle(ctx, b.x, b.y, b.r + 7); ctx.lineWidth = 3; ctx.setLineDash([6, 6]); ctx.strokeStyle = "#ffc83d"; ctx.stroke(); ctx.setLineDash([]); }
   const ca = Math.cos(b.aim), sa = Math.sin(b.aim);
-  for (const s of [-1, 1]) {
-    const ex = b.x + ca * 8 - sa * 8 * s, ey = b.y + sa * 8 + ca * 8 * s - 4;
+  const eyes = [-1, 1].map(s => [b.x + ca * 8 - sa * 8 * s, b.y + sa * 8 + ca * 8 * s - 4]);
+  if (b.cosmetics?.brille) {
+    // Sonnenbrille aus dem Shop: zwei dunkle Gläser mit Steg statt der Augen
+    ctx.beginPath(); ctx.moveTo(eyes[0][0], eyes[0][1]); ctx.lineTo(eyes[1][0], eyes[1][1]);
+    ctx.lineWidth = 3; ctx.strokeStyle = "#1c1c22"; ctx.stroke();
+    for (const [ex, ey] of eyes) {
+      circle(ctx, ex, ey, 7.5); ctx.fillStyle = "#1c1c22"; ctx.fill();
+      circle(ctx, ex - 2, ey - 2.5, 2.2); ctx.fillStyle = "rgba(255,255,255,.7)"; ctx.fill();
+    }
+  } else for (const [ex, ey] of eyes) {
     circle(ctx, ex, ey, 6); ctx.fillStyle = "#fff"; ctx.fill();
     circle(ctx, ex + ca * 2.5, ey + sa * 2.5, 3); ctx.fillStyle = "#1c1c22"; ctx.fill();
   }

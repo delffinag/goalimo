@@ -33,6 +33,9 @@ Der Build und das Deployment brechen ab, wenn die Prüfung fehlschlägt.
 
 ## D. Belohnungen und Geld
 - Siegprämien werden nur erspielt, nie verkauft. Angebote sind offen sichtbar, keine Zufallsziehung.
+- Medaillen werden nur erspielt, nie verkauft – auch nicht im Shop.
+- Der Shop verkauft nur gegen Spielwährung, zu festen und offen sichtbaren Preisen. Tagesangebote stehen pro Tag fest,
+  es gibt keine Zufallsware.
 - Keine Käufe mit echtem Geld im MVP. Später höchstens Kosmetik, keine Vorteile im Spiel.
 
 ## E. Offene Punkte für Menschen (nicht durch Code lösbar)

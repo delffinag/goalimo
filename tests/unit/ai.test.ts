@@ -8,7 +8,7 @@ import { startMatch } from "../../src/sim/match";
 import { NO_INPUT, tick } from "../../src/sim/tick";
 import { createWorld, type PlayerSetup, type SimEvent } from "../../src/sim/world";
 
-const setup: PlayerSetup = { figure: "flitzer", name: "Testi", stufe: 1, cosmetics: { krone: false, gold: false, spur: false } };
+const setup: PlayerSetup = { figure: "flitzer", name: "Testi", stufe: 1, cosmetics: { krone: false, gold: false, spur: false, brille: false, schein: false, feuerwerk: false } };
 
 describe("Bots", () => {
   it.each(["fussball", "rugby", "eishockey"])("spielen ein ganzes %s-Match zu Ende, ohne dass Werte kaputtgehen", modus => {

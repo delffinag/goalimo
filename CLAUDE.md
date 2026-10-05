@@ -48,11 +48,13 @@ den Code aber sauber in Module aufteilen.
 - Super lädt durch Treffer und zusätzlich mit der Zeit (voll nach ca. 18 s). Super-Knopf: tippen = automatisch, ziehen = zielen.
 - Bots passen, wenn sie bedrängt werden und ein Mitspieler freier und näher am Tor steht. Kein Torwart.
 - Punkt-Anzeige: „<Name> scored a goal“ bzw. im Rugby „<Name> scored a try“, bei einem Eigentor „… an own goal“.
-- Aktuell 3 Figuren: Rumpel (rot, hält am meisten aus), Zisch (gelb, am schnellsten), Falka (blau, größte Reichweite).
+- 3 Startfiguren, die jeder besitzt: Rumpel (rot, hält am meisten aus), Zisch (gelb, am schnellsten), Falka (blau, größte Reichweite).
+  Dazu 3 Figuren aus dem Shop: Kabumm (grün, wirft über Mauern), Lumi (pink, heilt das Team), Mauli (braun, Schild).
+  Die Figurenauswahl zeigt nur eigene Figuren (`gl-figuren`); Bots spielen mit allen.
   Weitere 47 Figuren liegen im Prototyp in `ROSTER_ALL` bereit.
 - Beim ersten Start einmalig Spielernamen abfragen (2–12 Zeichen), danach nicht mehr änderbar.
 - Lobby: Name als Quadrat oben links mit der Medaille darunter, Taler/Trainingspunkte/Kristalle oben rechts,
-  Knopf „Figuren“ links, Spielmodus unten links, gewählte Figur über dem Knopf „Spielen“ unten rechts,
+  darunter der Knopf „Shop“, Knopf „Figuren“ links, Spielmodus unten links, gewählte Figur über dem Knopf „Spielen“ unten rechts,
   Spielname in der Mitte.
 - Sitzung: Nach jedem Match wählt der Spieler „Nochmal spielen“ oder „Spiel verlassen“. Der Bildschirm nach dem Match
   zeigt nur Ergebnis, Spielstand und den Stand der Sitzung – gutgeschrieben wird nichts. Erst beim Verlassen wird alles
@@ -69,6 +71,12 @@ den Code aber sauber in Module aufteilen.
   Niederlage: −3 Kristalle (nie unter 0). Erfahrung (EP) pro Figur, steigt nur: Sieg +10, Unentschieden +5, Niederlage +2.
 - Trainingsstufe 1–5 (als Sterne), jede Stufe +8 % Leben/Schaden/Heilung. Kosten: 50/20, 100/40, 180/70, 300/100 (Taler/Trainingspunkte).
 - Kosmetik über Kristall-Schwellen 10/25/45 (Krone, Goldrand, Funkenspur), einmal freigeschaltet bleibt freigeschaltet.
+- Shop (`data/shop.ts`, `meta/shop.ts`): nur Spielwährung, feste und offen sichtbare Preise. Medaillen gibt es dort nie,
+  echtes Geld auch nicht (siehe `docs/RECHTLICHES.md` D). Vier Bereiche:
+  - Tagesangebote: jeden Tag 3 aus `TAGES_VORRAT`, für den Tag fest und für alle gleich, je einmal pro Tag (`gl-tageskauf`).
+  - Figuren: Kabumm 300, Lumi 400, Mauli 500 Taler.
+  - Kosmetik nur aus dem Shop, kostet Kristalle: Sonnenbrille 15, Leuchtring 25, Torfeuerwerk 35.
+  - Tausch, beliebig oft: 5 Kristalle → 120 Taler, 5 Kristalle → 40 Trainingspunkte, 100 Taler → 25 Trainingspunkte.
 - Figurenkarten: helle Karte, Farbband oben, rundes Medaillon mit Porträt, Name, Stärke als Pille, Sterne und EP unten.
 
 ## Qualitätsregeln

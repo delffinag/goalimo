@@ -153,7 +153,7 @@ describe("Siegprämie", () => {
     expect(waehlePraemie(p, { k: "kristalle", n: 3 })!.map(r => r.id)).toEqual(["krone"]);
     for (let i = 0; i < 5; i++) applyMatchResult(p, "brecher", "loss");
     expect(p.kristalle).toBe(0);
-    expect(playerSetup(p).cosmetics).toEqual({ krone: true, gold: false, spur: false });
+    expect(playerSetup(p).cosmetics).toEqual({ krone: true, gold: false, spur: false, brille: false, schein: false, feuerwerk: false });
   });
 });
 

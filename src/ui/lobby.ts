@@ -8,13 +8,14 @@ import { updatePraemieButtons } from "./praemie";
 
 /**
  * Lobby: Name als Schild oben links mit der Medaille darunter, Währungen oben rechts,
- * „Figuren“ links, Spielmodus unten links, gewählte Figur über dem Knopf „Spielen“ unten rechts.
+ * „Figuren“ und „Shop“ links, Spielmodus unten links, gewählte Figur über dem Knopf „Spielen“ unten rechts.
  */
 export function initLobby(app: App): () => void {
   const btns = $("modeBtns");
 
   $("lobbyPlay").addEventListener("click", () => app.play());
   $("lobbySetup").addEventListener("click", () => app.show("figures"));
+  $("lobbyShop").addEventListener("click", () => app.show("shop"));
   $("lobbyPraemie").addEventListener("click", () => app.openPraemie("lobby"));
   $("medalBtn").addEventListener("click", () => app.show("path"));
 

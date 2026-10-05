@@ -10,7 +10,7 @@ import { NO_INPUT, tick, type Brain, type PlayerInput } from "../../src/sim/tick
 import { createWorld, type PlayerSetup, type SimEvent, type World, type WorldOptions } from "../../src/sim/world";
 
 const idle: Brain = () => {};
-const setup: PlayerSetup = { figure: "brecher", name: "Testi", stufe: 1, cosmetics: { krone: false, gold: false, spur: false } };
+const setup: PlayerSetup = { figure: "brecher", name: "Testi", stufe: 1, cosmetics: { krone: false, gold: false, spur: false, brille: false, schein: false, feuerwerk: false } };
 
 function run(w: World, seconds: number, input: PlayerInput = NO_INPUT, brain: Brain = idle): SimEvent[] {
   const events: SimEvent[] = [];

@@ -52,6 +52,7 @@
       <span class="training" aria-hidden="true">T</span><b id="trainingCount" aria-label="Trainingspunkte">0</b>
       <span class="kristall" aria-hidden="true"></span><b id="kristallCount" aria-label="Kristalle">0</b>
     </div>
+    <button class="shopBtn" id="lobbyShop">Shop</button>
     <button class="figBtn" id="lobbySetup"><span>Figuren</span></button>
     <div class="lcenter">
       <h1 class="display">Goalimo</h1>
@@ -72,7 +73,7 @@
 
   <div id="menu" class="overlay figs" hidden>
     <div class="panel figPanel">
-      <div class="figHead"><h2 class="display">Wähle deine Figur <span id="figCount"></span></h2><button class="ghost" id="menuBack">Zurück zur Lobby</button></div>
+      <div class="figHead"><h2 class="display">Wähle deine Figur <span id="figCount"></span></h2><span class="figHeadBtns"><button class="ghost" id="figShop">Mehr im Shop</button><button class="ghost" id="menuBack">Zurück zur Lobby</button></span></div>
       <div class="tiles" id="cards"></div>
     </div>
     <div class="figModal" id="figModal" hidden>
@@ -97,6 +98,22 @@
       </div>
       <p class="sub" id="pathHint"></p>
       <div class="path" id="pathList"></div>
+    </div>
+  </div>
+
+  <div id="shopView" class="overlay" hidden>
+    <div class="panel shopPanel">
+      <div class="shopHead">
+        <h1 class="display">Shop</h1>
+        <span class="shopCur">
+          <span class="taler" aria-hidden="true"></span><b id="shopTaler" aria-label="Taler">0</b>
+          <span class="training" aria-hidden="true">T</span><b id="shopTraining" aria-label="Trainingspunkte">0</b>
+          <span class="kristall" aria-hidden="true"></span><b id="shopKristalle" aria-label="Kristalle">0</b>
+        </span>
+        <button class="ghost" id="shopBack">Zurück</button>
+      </div>
+      <p class="sub" id="shopNote" aria-live="polite"></p>
+      <div class="shopBody" id="shopBody"></div>
     </div>
   </div>
 

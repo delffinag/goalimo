@@ -110,6 +110,15 @@ function passBonus(w: World, passer: Kicker): void {
   if (passer.team === 0) w.floaters.push({ x: passer.x, y: passer.y - 50, t: 0, txt: "Pass! Super +25 %", col: "#ffc83d" });
 }
 
+/** Torfeuerwerk aus dem Shop: bunte Ringe um die Stelle, an der der Punkt fiel. Rein optisch. */
+function fireworks(w: World, x: number, y: number): void {
+  const cols = ["#ffc83d", "#ff5a5a", "#3fb8f0", "#57d96e", "#b388ff"];
+  for (let i = 0; i < 10; i++) {
+    const a = i * 0.628, d = 40 + (i % 3) * 35;
+    w.fx.push(ring(x + Math.cos(a) * d, y + Math.sin(a) * d, 4, 34 + (i % 2) * 16, 0.6 + (i % 4) * 0.12, cols[i % cols.length]));
+  }
+}
+
 /** Punkt für Team `tm`. Wer den Ball zuletzt berührt hat, steht in der Meldung. */
 export function scoreGoal(w: World, tm: number): void {
   w.score[tm]++;
@@ -118,6 +127,7 @@ export function scoreGoal(w: World, tm: number): void {
   w.goalMsg = !sc ? head : sc.team === tm ? `${sc.name} scored a ${word}` : `${sc.name} scored an own ${word}`;
   w.goalFlash = 2.6;
   w.events.push({ type: "goal", team: tm, msg: w.goalMsg });
+  if (sc && sc.team === tm && sc.cosmetics?.feuerwerk) fireworks(w, w.ball.x, w.ball.y);
   resetBall(w); w.projs = []; w.lobs = [];
   for (const b of w.ents) { respawnKicker(w, b); b.cool = 0; b.pickCool = 0; }
   // Im Golden Goal beendet das erste Tor das Spiel

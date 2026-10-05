@@ -56,6 +56,9 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 - Unentschieden: keine Prämie. Niederlage: −3 Kristalle (nie unter 0).
 - **Erfahrung** (EP) je Figur steigt immer: Sieg +10, Unentschieden +5, Niederlage +2.
 - **Trainingsstufe** 1–5 (als Sterne), je Stufe +8 % Leben, Schaden und Heilung.
+- **Shop** (oben rechts in der Lobby): nur Spielwährung, feste Preise, alles offen sichtbar. Drei Tagesangebote (je einmal
+  pro Tag), drei weitere Figuren für Taler, Kosmetik für Kristalle und Tausch zwischen den Währungen. Medaillen und
+  echtes Geld gibt es dort nicht.
 
 ## Aufbau
 
@@ -66,8 +69,8 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 | `src/ai` | Bots: Wegfindung, Pässe, bewusst ungenaues Zielen. |
 | `src/input` | Joysticks, Super-Stick, Tastatur, Maus. Liefert pro Tick eine `PlayerInput`. |
 | `src/render` | Canvas-Darstellung von Spielfeld, Figuren, Zielhilfe und Porträts. Liest die Welt nur. |
-| `src/meta` | Name, Taler, Trainingspunkte, Kristalle, Siegprämien, Medaillen, Belohnungsweg, Trainingsstufen, Erfahrung, laufende Sitzung, Speicherung (localStorage, austauschbar). |
-| `src/ui` | DOM-Screens: Willkommen, Lobby, Figuren, Belohnungsweg, Siegprämie, Spielende, Abschluss der Sitzung, Anzeigen im Match, Bühne. |
+| `src/meta` | Name, Taler, Trainingspunkte, Kristalle, Siegprämien, Medaillen, Belohnungsweg, Trainingsstufen, Erfahrung, Shop, laufende Sitzung, Speicherung (localStorage, austauschbar). |
+| `src/ui` | DOM-Screens: Willkommen, Lobby, Figuren, Shop, Belohnungsweg, Siegprämie, Spielende, Abschluss der Sitzung, Anzeigen im Match, Bühne. |
 | `src/game.ts` | Verbindet Eingabe → Simulation → Darstellung. |
 
 Die Simulation ist strikt vom Rendering getrennt: Sie bekommt pro Tick nur die Eingabe des Spielers und meldet Ereignisse

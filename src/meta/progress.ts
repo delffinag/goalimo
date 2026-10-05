@@ -2,7 +2,7 @@ import {
   ERFAHRUNG, LOSS_KRISTALLE, MAX_STUFE, NAME_MAX, NAME_MIN, PRAEMIE_ANGEBOTE, REWARD_PATH, REWARDS,
   TRAINING_COST, type CosmeticReward, type PathStation, type PraemieKind
 } from "../data/balance";
-import { clampStufe, DEFAULT_FIGURE, FIGURES } from "../data/figures";
+import { clampStufe, DEFAULT_FIGURE, FIGURES, STARTER_FIGURES } from "../data/figures";
 import { DEFAULT_MODE, MODES } from "../data/modes";
 import type { MatchResult, PlayerSetup } from "../sim/world";
 import type { Store } from "./storage";
@@ -11,7 +11,7 @@ const K = {
   player: "gl-name", kristalle: "gl-kristalle", taler: "gl-taler", training: "gl-training",
   siegpraemien: "gl-siegpraemien", stufen: "gl-trainingsstufen", erfahrung: "gl-erfahrung",
   unlocked: "gl-belohnungen", medaillen: "gl-medaillen", weg: "gl-weg", chosen: "gl-figur", modus: "gl-modus",
-  tut: "gl-uebung", migriert: "gl-migriert"
+  tut: "gl-uebung", migriert: "gl-migriert", figuren: "gl-figuren", tageskauf: "gl-tageskauf"
 };
 
 /**
@@ -37,6 +37,10 @@ export interface Progress {
   medaillen: number;
   /** Wie viele Stationen des Belohnungswegs schon abgeholt sind */
   wegStufe: number;
+  /** Figuren, die der Spieler besitzt: die Startfiguren und alles, was im Shop gekauft wurde */
+  figuren: Set<string>;
+  /** Welche Tagesangebote an welchem Tag schon gekauft sind (jedes einmal pro Tag) */
+  tageskauf: { tag: string; ids: string[] };
   chosen: string;
   /** Gewählter Spielmodus (Schlüssel aus data/modes.ts) */
   modus: string;
@@ -91,6 +95,8 @@ export function migrate(store: Store): void {
 export function loadProgress(store: Store): Progress {
   migrate(store);
   const chosen = store.get(K.chosen), modus = store.get(K.modus);
+  const figuren = new Set([...STARTER_FIGURES, ...json<string[]>(store.get(K.figuren), []).filter(k => FIGURES[k])]);
+  const tageskauf = json<{ tag?: unknown; ids?: unknown }>(store.get(K.tageskauf), {});
   const p: Progress = {
     playerName: (store.get(K.player) || "").trim(),
     taler: int(store.get(K.taler)), training: int(store.get(K.training)), kristalle: int(store.get(K.kristalle)),
@@ -99,7 +105,12 @@ export function loadProgress(store: Store): Progress {
     unlocked: new Set(json<string[]>(store.get(K.unlocked), [])),
     medaillen: readMedals(store.get(K.medaillen)),
     wegStufe: int(store.get(K.weg)),
-    chosen: chosen && FIGURES[chosen] ? chosen : DEFAULT_FIGURE,
+    figuren,
+    tageskauf: {
+      tag: typeof tageskauf.tag === "string" ? tageskauf.tag : "",
+      ids: Array.isArray(tageskauf.ids) ? tageskauf.ids.filter((x): x is string => typeof x === "string") : []
+    },
+    chosen: chosen && figuren.has(chosen) ? chosen : DEFAULT_FIGURE,
     modus: modus && MODES[modus] ? modus : DEFAULT_MODE,
     tutDone: store.get(K.tut) === "1"
   };
@@ -114,6 +125,7 @@ export function saveProgress(store: Store, p: Progress): void {
   store.set(K.stufen, JSON.stringify(p.stufen)); store.set(K.erfahrung, JSON.stringify(p.erfahrung));
   store.set(K.unlocked, JSON.stringify([...p.unlocked]));
   store.set(K.medaillen, String(p.medaillen)); store.set(K.weg, String(p.wegStufe));
+  store.set(K.figuren, JSON.stringify([...p.figuren])); store.set(K.tageskauf, JSON.stringify(p.tageskauf));
   store.set(K.chosen, p.chosen); store.set(K.modus, p.modus);
   if (p.tutDone) store.set(K.tut, "1");
 }
@@ -196,6 +208,9 @@ export function waehlePraemie(p: Progress, item: PraemieItem): CosmeticReward[] 
 export function playerSetup(p: Progress): PlayerSetup {
   return {
     figure: p.chosen, name: p.playerName, stufe: stufeOf(p, p.chosen),
-    cosmetics: { krone: p.unlocked.has("krone"), gold: p.unlocked.has("gold"), spur: p.unlocked.has("spur") }
+    cosmetics: {
+      krone: p.unlocked.has("krone"), gold: p.unlocked.has("gold"), spur: p.unlocked.has("spur"),
+      brille: p.unlocked.has("brille"), schein: p.unlocked.has("schein"), feuerwerk: p.unlocked.has("feuerwerk")
+    }
   };
 }
