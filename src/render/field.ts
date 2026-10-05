@@ -62,8 +62,11 @@ function drawGrass(ctx: Ctx): void {
   circle(ctx, W / 2, H / 2, 110); ctx.stroke();
 }
 
-/** Eisfläche mit Bande, zwei blauen Linien und rotem Mittelkreis */
-function drawIce(ctx: Ctx): void {
+/** Eisfläche mit runder Bande, zwei blauen Linien, rotem Mittelkreis und Torräumen */
+function drawIce(ctx: Ctx, map: LoadedMap): void {
+  const R = map.corner;
+  ctx.save();
+  roundRect(ctx, 0, 0, W, H, R); ctx.clip();
   ctx.fillStyle = "#e9f3fb"; ctx.fillRect(0, 0, W, H);
   // Schlieren vom Schlittschuh, in der Breite der Rasenstreifen
   ctx.fillStyle = "#dfedf9";
@@ -73,13 +76,27 @@ function drawIce(ctx: Ctx): void {
   ctx.strokeStyle = "#d94f4f"; ctx.lineWidth = 8;
   ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
   ctx.lineWidth = 5; circle(ctx, W / 2, H / 2, 110); ctx.stroke();
+  // Bullykreise in den Drittelfeldern
+  for (const x of [W / 6, (W * 5) / 6]) for (const y of [H * 0.27, H * 0.73]) {
+    ctx.lineWidth = 4; circle(ctx, x, y, 70); ctx.stroke();
+    ctx.fillStyle = "#d94f4f"; circle(ctx, x, y, 9); ctx.fill();
+  }
+  // Torraum als Halbkreis vor jedem Tor
+  for (const g of GOALS) {
+    const left = g.x === 0, cx = left ? g.x + g.w : g.x;
+    ctx.beginPath(); ctx.arc(cx, g.y + g.h / 2, 120, left ? -Math.PI / 2 : Math.PI / 2, left ? Math.PI / 2 : Math.PI * 1.5);
+    ctx.closePath(); ctx.fillStyle = "rgba(90,160,230,.28)"; ctx.fill();
+    ctx.strokeStyle = "#d94f4f"; ctx.lineWidth = 4; ctx.stroke();
+  }
+  ctx.restore();
   // Bande zum Schluss, damit sie über den Linien liegt
-  ctx.strokeStyle = "rgba(52,80,110,.6)"; ctx.lineWidth = 10; ctx.strokeRect(5, 5, W - 10, H - 10);
+  ctx.strokeStyle = "#f4f8fc"; ctx.lineWidth = 14; roundRect(ctx, 0, 0, W, H, R); ctx.stroke();
+  ctx.strokeStyle = "#e0b43a"; ctx.lineWidth = 5; roundRect(ctx, 5, 5, W - 10, H - 10, Math.max(0, R - 5)); ctx.stroke();
 }
 
 /** Spielfeld je nach Modus: Rasen oder Eis, dazu Tore oder Malfelder */
-export function drawFloor(ctx: Ctx, mode: GameMode): void {
-  if (mode.field === "eis") drawIce(ctx); else drawGrass(ctx);
+export function drawFloor(ctx: Ctx, mode: GameMode, map: LoadedMap): void {
+  if (mode.field === "eis") drawIce(ctx, map); else drawGrass(ctx);
   if (mode.scoreBy === "carry") drawTryZones(ctx); else drawGoals(ctx);
 }
 

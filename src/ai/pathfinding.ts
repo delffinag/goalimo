@@ -1,6 +1,6 @@
 import { H, W } from "../data/balance";
 import type { Point } from "../data/types";
-import { inRect, losWide } from "../sim/geometry";
+import { inRect, losWide, outsideCorner } from "../sim/geometry";
 import { clamp, hyp } from "../sim/math";
 import type { Kicker, LoadedMap } from "../sim/world";
 
@@ -15,6 +15,7 @@ function blockedGrid(map: LoadedMap): Uint8Array {
     g = new Uint8Array(GW * GH);
     for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
       const cx = (i + 0.5) * GC, cy = (j + 0.5) * GC;
+      if (outsideCorner(map, cx, cy, 24)) { g[j * GW + i] = 1; continue; }
       for (const w of map.walls) if (inRect(cx, cy, w, 24)) { g[j * GW + i] = 1; break; }
     }
     grids.set(map, g);

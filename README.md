@@ -35,11 +35,11 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 
 3 gegen 3, drei Modi, in der Lobby unten links wählbar:
 
-| Modus | Punkt | Besonderheit | Sieg |
-| --- | --- | --- | --- |
-| **Fußball** | Der Ball muss ins gegnerische Tor. | – | 3 Tore |
-| **Rugby** | Eine Figur muss den Ball selbst über die gegnerische Linie tragen – geschossen zählt nicht. | Malfeld über die volle Feldhöhe | 3 Versuche |
-| **Eishockey** | Der Puck muss ins gegnerische Tor. | Der Puck bremst kaum und fliegt 1,8-mal so weit | 3 Treffer |
+| Modus | Karte | Punkt | Besonderheit | Sieg |
+| --- | --- | --- | --- | --- |
+| **Fußball** | Stadtwiese | Der Ball muss ins gegnerische Tor. | – | 3 Tore |
+| **Rugby** | Grabenfeld | Eine Figur muss den Ball selbst über die gegnerische Linie tragen – geschossen zählt nicht. | Malfeld über die volle Feldhöhe | 3 Versuche |
+| **Eishockey** | Frostbahn | Der Puck muss ins gegnerische Tor. | Ein Schuss gleitet über das ganze Feld, der Puck prallt von der Bande ab, die Bahn hat runde Ecken | 3 Treffer |
 
 - Spielzeit **3:00**.
 - Gleichstand nach Ablauf: **Golden Goal**, höchstens 60 s. Fällt kein Punkt, endet das Spiel unentschieden.
@@ -61,7 +61,7 @@ verkürzt zusätzlich Spielzeit und Verlängerung.
 
 | Modul | Aufgabe |
 | --- | --- |
-| `src/data` | Figuren, Karte, Spielmodi und Balancing als Daten. Zahlen ändert man hier, nicht im Code. |
+| `src/data` | Figuren, Karten (eine je Modus), Spielmodi und Balancing als Daten. Zahlen ändert man hier, nicht im Code. |
 | `src/sim` | Simulation im festen Takt (60 Hz): Bewegung, Kollision, Geschosse, Ball, Tore, Übungsrunde. Kein DOM, eigene Zufallsquelle. |
 | `src/ai` | Bots: Wegfindung, Pässe, bewusst ungenaues Zielen. |
 | `src/input` | Joysticks, Super-Stick, Tastatur, Maus. Liefert pro Tick eine `PlayerInput`. |

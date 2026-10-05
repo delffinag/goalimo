@@ -1,4 +1,4 @@
-import { FOE_EXTRA_SHOOT_DELAY, H, LOB_TIME, PROJ_SPEED, W } from "../data/balance";
+import { BOT_SHOT_MAX, FOE_EXTRA_SHOOT_DELAY, H, LOB_TIME, PROJ_SPEED, W } from "../data/balance";
 import { kickDist, superKickDist } from "../data/modes";
 import { LANES, targetCenter } from "../data/maps";
 import type { Point } from "../data/types";
@@ -70,7 +70,8 @@ function ballBrain(w: World, b: Kicker, tgt: Kicker | null, bd: number, canHit: 
     b.ai.passWait -= dt;
     const foes = w.ents.filter(e => e.alive && e.team !== b.team);
     const pressed = foes.some(e => hyp(e.x - b.x, e.y - b.y) < 260);
-    const reach = kickDist(w.mode), superReach = superKickDist(w.mode);
+    // Auf dem Eis käme der Puck übers ganze Feld. Bots schießen trotzdem erst aus mittlerer Entfernung.
+    const reach = Math.min(kickDist(w.mode), BOT_SHOT_MAX), superReach = Math.min(superKickDist(w.mode), BOT_SHOT_MAX * 1.5);
     if ((pressed || w.rng() < 0.012) && b.ai.passWait <= 0 && b.cool <= 0 && d > reach - 20 && tryPass(w, b, d, foes))
       return { carry: true };
     // Im Rugby zählt nur das Tragen: der Ballträger schießt nie aufs Ziel, er läuft und passt

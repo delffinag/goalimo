@@ -49,7 +49,7 @@ export interface Ball {
 export interface Ring { x: number; y: number; r0: number; r1: number; t: number; dur: number; col: string }
 export interface Floater { x: number; y: number; t: number; txt: string; col: string }
 
-export interface LoadedMap { walls: Rect[]; bushes: Rect[]; spawns: [Point[], Point[]] }
+export interface LoadedMap { name: string; corner: number; walls: Rect[]; bushes: Rect[]; spawns: [Point[], Point[]] }
 
 export interface TutorialState { step: number; moved: number; hits: number; superUsed: boolean; doneT: number }
 
@@ -63,8 +63,9 @@ export type SimEvent =
 export interface World {
   rng: Rng;
   phase: Phase;
-  /** Spielmodus: Fußball (Ball ins Tor) oder Rugby (Ball über die Linie tragen) */
+  /** Spielmodus: Fußball, Rugby oder Eishockey */
   mode: GameMode;
+  /** Karte des aktuellen Modus */
   map: LoadedMap;
   ents: Kicker[]; projs: Projectile[]; lobs: Lob[]; fx: Ring[]; floaters: Floater[];
   ball: Ball;
@@ -82,7 +83,12 @@ export interface World {
   events: SimEvent[];
 }
 
+// Jede Karte wird nur einmal aufbereitet. Darstellung und Wegfindung merken sich ihre Daten pro geladener Karte.
+const loaded = new WeakMap<MapDef, LoadedMap>();
+
 export function loadMap(def: MapDef): LoadedMap {
+  const hit = loaded.get(def);
+  if (hit) return hit;
   const mirror = (list: MapDef["walls"]) => {
     const out: Rect[] = [];
     for (const [x, y, w, h] of list) {
@@ -92,10 +98,12 @@ export function loadMap(def: MapDef): LoadedMap {
     }
     return out;
   };
-  return {
-    walls: mirror(def.walls), bushes: mirror(def.bushes),
+  const map: LoadedMap = {
+    name: def.name, corner: def.corner ?? 0, walls: mirror(def.walls), bushes: mirror(def.bushes),
     spawns: [def.spawns.map(([x, y]) => ({ x, y })), def.spawns.map(([x, y]) => ({ x: W - x, y }))]
   };
+  loaded.set(def, map);
+  return map;
 }
 
 const newBall = (): Ball => ({ x: W / 2, y: H / 2, vx: 0, vy: 0, r: BALL_RADIUS, carrier: null, superT: 0, last: null, passer: null });
@@ -103,16 +111,21 @@ const newBall = (): Ball => ({ x: W / 2, y: H / 2, vx: 0, vy: 0, r: BALL_RADIUS,
 /** Verkürzte Zeiten für automatische Tests. Im Spiel gelten die Werte aus `balance`. */
 export interface WorldOptions { matchTime?: number; goldenTime?: number; mode?: GameMode }
 
-export function createWorld(def: MapDef, seed: number = Date.now(), opts: WorldOptions = {}): World {
+/** Die Karte folgt dem Spielmodus: jeder Modus hat seine eigene */
+export function createWorld(seed: number = Date.now(), opts: WorldOptions = {}): World {
+  const mode = opts.mode ?? modeOf(null);
   const matchTime = opts.matchTime ?? MATCH_TIME, goldenTime = opts.goldenTime ?? GOLDEN_TIME;
   return {
-    rng: mulberry32(seed), phase: "menu", mode: opts.mode ?? modeOf(null), map: loadMap(def),
+    rng: mulberry32(seed), phase: "menu", mode, map: loadMap(mode.map),
     ents: [], projs: [], lobs: [], fx: [], floaters: [], ball: newBall(),
     score: [0, 0], timeLeft: matchTime, countdown: 0, endWait: 0, matchTime, goldenTime, golden: false,
     goalFlash: 0, goalMsg: "", matchHint: 0,
     player: null, setup: null, tut: { step: 0, moved: 0, hits: 0, superUsed: false, doneT: 0 }, events: []
   };
 }
+
+/** Wechselt den Modus und mit ihm die Karte */
+export function setMode(w: World, mode: GameMode): void { w.mode = mode; w.map = loadMap(mode.map); }
 
 export function resetBall(w: World): void { Object.assign(w.ball, newBall()); }
 

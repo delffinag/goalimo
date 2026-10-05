@@ -41,6 +41,10 @@ export type RectTuple = [x: number, y: number, w: number, h: number];
 
 /** Karte: nur die linke Hälfte definieren, rechts wird gespiegelt */
 export interface MapDef {
+  /** Name der Karte, steht in der Lobby unter dem Modus */
+  name: string;
+  /** Radius der abgerundeten Ecken (Bande der Eisbahn), 0 = eckiges Feld */
+  corner?: number;
   walls: RectTuple[];
   bushes: RectTuple[];
   spawns: [x: number, y: number][];

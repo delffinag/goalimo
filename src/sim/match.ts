@@ -3,7 +3,7 @@ import { FIGURE_KEYS, FIGURES, scaledType } from "../data/figures";
 import { collide } from "./geometry";
 import { clamp, shuffled } from "./math";
 import type { GameMode } from "../data/modes";
-import { makeKicker, resetBall, respawnKicker, type MatchResult, type PlayerSetup, type World } from "./world";
+import { makeKicker, resetBall, respawnKicker, setMode, type MatchResult, type PlayerSetup, type World } from "./world";
 
 function resetWorld(w: World): void {
   w.projs = []; w.lobs = []; w.fx = []; w.floaters = []; resetBall(w);
@@ -12,7 +12,7 @@ function resetWorld(w: World): void {
 /** Übungsrunde vor dem ersten Match: laufen, schießen, Busch, Super */
 export function startTutorial(w: World, setup: PlayerSetup, mode: GameMode = w.mode): void {
   resetWorld(w);
-  w.setup = setup; w.mode = mode; w.phase = "tutorial";
+  w.setup = setup; setMode(w, mode); w.phase = "tutorial";
   w.player = makeKicker(w, scaledType(setup.figure, setup.stufe), 0, 1, setup);
   w.ents = [w.player];
   w.tut = { step: 0, moved: 0, hits: 0, superUsed: false, doneT: 0 };
@@ -21,7 +21,7 @@ export function startTutorial(w: World, setup: PlayerSetup, mode: GameMode = w.m
 /** 3 gegen 3: Der Spieler bekommt die zwei anderen Figuren als Mitspieler, die Gegner sind zufällig aufgestellt. */
 export function startMatch(w: World, setup: PlayerSetup, mode: GameMode = w.mode): void {
   resetWorld(w);
-  w.setup = setup; w.mode = mode; w.matchHint = 5;
+  w.setup = setup; setMode(w, mode); w.matchHint = 5;
   const player = makeKicker(w, scaledType(setup.figure, setup.stufe), 0, 0, setup);
   const allies = shuffled(w.rng, FIGURE_KEYS.filter(t => t !== setup.figure));
   const foes = shuffled(w.rng, FIGURE_KEYS);

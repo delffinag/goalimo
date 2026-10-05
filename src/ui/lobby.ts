@@ -1,6 +1,6 @@
 import { MEDAL_NAME } from "../data/balance";
 import { FIGURES } from "../data/figures";
-import { MODE_KEYS, MODES } from "../data/modes";
+import { MODE_KEYS, MODES, modeOf } from "../data/modes";
 import { drawPortrait } from "../render/portrait";
 import type { App } from "./app";
 import { $ } from "./dom";
@@ -51,6 +51,7 @@ export function initLobby(app: App): () => void {
     $("lobbyFigure").style.setProperty("--c", T.look[1]);
     for (const b of btns.children as HTMLCollectionOf<HTMLElement>)
       b.setAttribute("aria-pressed", String(b.dataset.m === p.modus));
+    $("mapName").textContent = modeOf(p.modus).map.name;
     updatePraemieButtons(p);
     // Das Porträt erst zeichnen, wenn die Lobby sichtbar ist und der Canvas eine Größe hat
     requestAnimationFrame(() => drawPortrait($<HTMLCanvasElement>("lobbyCv"), p.chosen));

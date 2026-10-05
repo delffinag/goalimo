@@ -1,6 +1,5 @@
 import { botThink } from "./ai/bot";
 import { STEP } from "./data/balance";
-import { FIELD } from "./data/maps";
 import type { GameMode } from "./data/modes";
 import { createInput } from "./input/input";
 import { createRenderer } from "./render/renderer";
@@ -39,7 +38,7 @@ export function createGame(): Game {
   const renderer = createRenderer(canvas, stage);
   const input = createInput(canvas, $("superBtn"), stage, renderer.screenToWorld);
   const hud = createHud();
-  const world = createWorld(FIELD, Date.now(), testOptions());
+  const world = createWorld(Date.now(), testOptions());
   const handlers: ((e: SimEvent) => void)[] = [];
 
   let last = performance.now(), acc = 0;

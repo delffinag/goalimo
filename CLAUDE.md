@@ -33,8 +33,13 @@ den Code aber sauber in Module aufteilen.
   - **Rugby**: Sieg bei 3 Versuchen. Eine Figur muss den Ball selbst über die gegnerische Linie tragen; ein
     geschossener Ball im Malfeld zählt nicht. Das Malfeld geht über die volle Feldhöhe (`TRY_ZONES` in `data/maps.ts`).
   - **Eishockey**: Sieg bei 3 Treffern, gezählt wird wie im Fußball. Der Unterschied liegt in der Physik: Der Puck
-    bremst kaum (`ICE_FRICTION`) und fliegt 1,8-mal so weit (`ICE_KICK_FACTOR`). Eisfläche statt Rasen, Puck statt
-    Ball, Schneewehen statt Büsche – gesteuert über `mode.field`.
+    bremst kaum (`ICE_FRICTION`), ein normaler Schuss gleitet über das ganze Feld (`ICE_KICK_DIST`), und die Bande
+    federt (`ICE_BOUNCE`, auf Rasen `BALL_BOUNCE`). Die Bahn hat runde Ecken (`corner` der Karte). Eisfläche statt
+    Rasen, Puck statt Ball, Schneewehen statt Büsche – gesteuert über `mode.field`. Bots schießen trotzdem erst aus
+    höchstens `BOT_SHOT_MAX` (500 px) aufs Tor, sonst fielen die Treffer zu schnell.
+- Jeder Modus hat seine eigene Karte (`mode.map`, Karten in `data/maps.ts`): Fußball „Stadtwiese“, Rugby „Grabenfeld“,
+  Eishockey „Frostbahn“. Der Kartenname steht in der Lobby über den Modus-Knöpfen.
+- Die Zielhilfe mit Ball zeigt den ganzen Weg des Schusses inklusive Abprallern (`traceKick` in `sim/ball.ts`).
 - Spielzeit 3:00. Bei Gleichstand nach Ablauf: Golden Goal (max. 60 s), danach Unentschieden.
 - Gelungener Pass zu einem Mitspieler lädt den Super des Passgebers um 25 %.
 - Normaler Schuss mit Ball: ca. 300 px (3 Rasenstreifen à 100 px). Super-Schuss: ca. 500 px. Ballreibung exp(-3·t).

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { botThink } from "../../src/ai/bot";
 import { findPath } from "../../src/ai/pathfinding";
 import { STEP } from "../../src/data/balance";
-import { FIELD } from "../../src/data/maps";
 import { MODES } from "../../src/data/modes";
 import { inRect } from "../../src/sim/geometry";
 import { startMatch } from "../../src/sim/match";
@@ -14,7 +13,7 @@ const setup: PlayerSetup = { figure: "flitzer", name: "Testi", stufe: 1, cosmeti
 describe("Bots", () => {
   it.each(["fussball", "rugby", "eishockey"])("spielen ein ganzes %s-Match zu Ende, ohne dass Werte kaputtgehen", modus => {
     for (const seed of [1, 2, 3]) {
-      const w = createWorld(FIELD, seed, { mode: MODES[modus] });
+      const w = createWorld(seed, { mode: MODES[modus] });
       startMatch(w, setup);
       const events: SimEvent[] = [];
       // Spielzeit 3:00, dazu ein mögliches Golden Goal von 60 s und die Pausen nach Toren
@@ -27,7 +26,7 @@ describe("Bots", () => {
   });
 
   it("passen, wenn sie bedrängt werden und ein Mitspieler freier und näher am Tor steht", () => {
-    const w = createWorld(FIELD, 7);
+    const w = createWorld(7);
     startMatch(w, setup);
     for (let i = 0; i < 3.1 / STEP; i++) tick(w, STEP, NO_INPUT, () => {});
     const [player, carrier, mate, foe, ...rest] = w.ents;
@@ -44,7 +43,7 @@ describe("Bots", () => {
   });
 
   it("finden einen Weg um Mauern herum", () => {
-    const w = createWorld(FIELD, 1);
+    const w = createWorld(1);
     const path = findPath(w.map, 500, 550, 900, 550);
     expect(path).not.toBeNull();
     expect(path!.length).toBeGreaterThan(2);

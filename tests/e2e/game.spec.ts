@@ -304,7 +304,7 @@ test("Belohnungsweg: über die Medaille erreichbar, Stationen werden abgeholt", 
   await expect(page.locator("#pathHint")).toContainText("Noch 1 bis zur nächsten Station");
 });
 
-test("Eishockey: dritter Modus, Puck auf dem Eis mit weiterem Schuss", async ({ page }) => {
+test("Eishockey: dritter Modus auf eigener Karte, Puck gleitet weit", async ({ page }) => {
   await start(page, PLAYER);
   await expectLobby(page);
   await expect(page.locator(".mbtn")).toHaveCount(3);
@@ -315,12 +315,14 @@ test("Eishockey: dritter Modus, Puck auf dem Eis mit weiterem Schuss", async ({ 
   await expect(eis).toHaveAttribute("aria-pressed", "true");
   await page.reload();
   await expect(page.locator('.mbtn[data-m="eishockey"]')).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#mapName")).toHaveText("Frostbahn");
 
   await page.locator("#lobbyPlay").click();
   await waitForPhase(page, "match");
   await expect(page.locator("#sf")).toHaveText("🏒 0");
 
-  // Auf dem Eis fliegt der Puck weiter als ein Ball auf Rasen (300 px)
+  expect(await page.evaluate(() => window.__game.world.map.name)).toBe("Frostbahn");
+  // Auf dem Eis fliegt der Puck weiter als ein Ball auf Rasen (300 px). Gemessen wird früh, bevor er im Tor landet.
   const startX = await page.evaluate(() => {
     const w = window.__game.world, p = w.player!;
     for (const e of w.ents) if (e !== p) { e.x = 300 + e.slot * 60; e.y = 1040; }
@@ -330,7 +332,7 @@ test("Eishockey: dritter Modus, Puck auf dem Eis mit weiterem Schuss", async ({ 
   });
   // Tippen zielt automatisch aufs gegnerische Tor, also nach rechts
   await tapStage(page, 0.75, 0.5);
-  await page.waitForTimeout(4000);
+  await page.waitForTimeout(700);
   const weite = await page.evaluate(() => window.__game.world.ball.x) - startX;
   expect(weite).toBeGreaterThan(400);
 

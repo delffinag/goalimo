@@ -52,6 +52,35 @@ export function collide(map: LoadedMap, e: { x: number; y: number; r: number }):
     }
   }
   e.x = clamp(e.x, e.r, W - e.r); e.y = clamp(e.y, e.r, H - e.r);
+  keepInCorners(map, e);
+}
+
+/** Mittelpunkt der runden Ecke, in der (x, y) liegt, oder null außerhalb der Ecken */
+function cornerCenter(map: LoadedMap, x: number, y: number): Point | null {
+  const R = map.corner;
+  if (R <= 0) return null;
+  const cx = x < R ? R : x > W - R ? W - R : -1, cy = y < R ? R : y > H - R ? H - R : -1;
+  return cx < 0 || cy < 0 ? null : { x: cx, y: cy };
+}
+
+/** Liegt (x, y) mit Abstand `pad` hinter der runden Bande einer Ecke? */
+export function outsideCorner(map: LoadedMap, x: number, y: number, pad = 0): boolean {
+  const c = cornerCenter(map, x, y);
+  return !!c && hyp(x - c.x, y - c.y) > map.corner - pad;
+}
+
+/**
+ * Runde Ecken der Bande: schiebt einen Kreis zurück aufs Feld.
+ * Gibt die Normale zur Feldmitte hin zurück, wenn er angestoßen ist, sonst null.
+ */
+export function keepInCorners(map: LoadedMap, e: { x: number; y: number; r: number }): [number, number] | null {
+  const c = cornerCenter(map, e.x, e.y);
+  if (!c) return null;
+  const dx = e.x - c.x, dy = e.y - c.y, d = hyp(dx, dy), max = map.corner - e.r;
+  if (d <= max) return null;
+  const nx = dx / d, ny = dy / d;
+  e.x = c.x + nx * max; e.y = c.y + ny * max;
+  return [-nx, -ny];
 }
 
 /** Im Busch sieht das andere Team eine Figur erst aus der Nähe oder wenn sie sich verrät */

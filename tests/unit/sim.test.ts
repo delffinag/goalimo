@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { GOLDEN_TIME, MATCH_TIME, PROJ_SPEED, RESPAWN_TIME, STEP, W, WIN_GOALS } from "../../src/data/balance";
 import { FIGURES } from "../../src/data/figures";
-import { FIELD, GOALS, TRY_DEPTH } from "../../src/data/maps";
-import { MODES } from "../../src/data/modes";
+import { GOALS, TRY_DEPTH } from "../../src/data/maps";
+import { kickDist, MODES } from "../../src/data/modes";
+import { traceKick } from "../../src/sim/ball";
 import { damage, tryAttack, trySuper } from "../../src/sim/combat";
 import { startMatch } from "../../src/sim/match";
 import { NO_INPUT, tick, type Brain, type PlayerInput } from "../../src/sim/tick";
@@ -19,7 +20,7 @@ function run(w: World, seconds: number, input: PlayerInput = NO_INPUT, brain: Br
 
 /** Match mit stillstehenden Bots, Anstoß-Countdown schon abgelaufen */
 function liveMatch(seed = 1, opts: WorldOptions = {}): World {
-  const w = createWorld(FIELD, seed, opts);
+  const w = createWorld(seed, opts);
   startMatch(w, setup);
   run(w, 3.1);
   expect(w.phase).toBe("match");
@@ -152,24 +153,87 @@ describe("Tore und Spielende", () => {
   });
 });
 
+describe("Karten", () => {
+  it("jeder Modus spielt auf seiner eigenen Karte", () => {
+    const namen = Object.values(MODES).map(m => {
+      const w = createWorld(1);
+      startMatch(w, setup, m);
+      return w.map.name;
+    });
+    expect(namen).toEqual(["Stadtwiese", "Grabenfeld", "Frostbahn"]);
+  });
+
+  it.each(Object.keys(MODES))("auf der Karte für %s stehen Startplätze und Anstoß frei", key => {
+    const w = createWorld(1, { mode: MODES[key] });
+    startMatch(w, setup, MODES[key]);
+    const frei = (x: number, y: number, r: number) =>
+      w.map.walls.every(m => x + r <= m.x || x - r >= m.x + m.w || y + r <= m.y || y - r >= m.y + m.h);
+    for (const e of w.ents) expect(frei(e.x, e.y, e.r)).toBe(true);
+    expect(frei(w.ball.x, w.ball.y, w.ball.r)).toBe(true);
+  });
+});
+
 describe("Eishockey", () => {
   const eis = () => liveMatch(1, { mode: MODES.eishockey });
 
-  it("der Puck gleitet deutlich weiter als ein Ball auf Rasen", () => {
-    const strecke = (w: World) => {
-      giveBall(w, 600, 250);
-      expect(tryAttack(w, w.player!, 0, 1)).toBe(true);
-      const x0 = w.ball.x;
-      run(w, 6);
-      return w.ball.x - x0;
+  it("ein normaler Schuss gleitet über das ganze Feld und prallt von der Bande zurück", () => {
+    const w = eis();
+    // y = 200 ist auf der Frostbahn frei von Mauern und liegt neben den runden Ecken
+    giveBall(w, 200, 200);
+    expect(tryAttack(w, w.player!, 0, 1)).toBe(true);
+    let maxX = 0, zurueck = false;
+    for (let t = 0; t < 6; t += STEP) {
+      run(w, STEP);
+      maxX = Math.max(maxX, w.ball.x);
+      if (maxX > W - 40 && w.ball.vx < 0) zurueck = true;
+    }
+    expect(maxX).toBeGreaterThan(W - 40);
+    expect(zurueck).toBe(true);
+    expect(w.score).toEqual([0, 0]);
+  });
+
+  it("die Bande federt stärker als der Rand auf Rasen", () => {
+    const abprall = (w: World) => {
+      park(w);
+      Object.assign(w.ball, { x: 900, y: 200, vx: 0, vy: -600 });
+      run(w, 1 / 60);
+      let vor = 0;
+      for (let t = 0; t < 1 && w.ball.vy < 0; t += STEP) { vor = -w.ball.vy; run(w, STEP); }
+      return w.ball.vy / vor;
     };
-    const rasen = strecke(liveMatch());
-    const eisStrecke = strecke(eis());
-    expect(rasen).toBeGreaterThan(285);
-    expect(rasen).toBeLessThan(315);
-    // 1,8-fache Schussweite auf dem Eis
-    expect(eisStrecke / rasen).toBeGreaterThan(1.7);
-    expect(eisStrecke / rasen).toBeLessThan(1.9);
+    expect(abprall(eis())).toBeGreaterThan(0.85);
+    expect(abprall(liveMatch())).toBeLessThan(0.75);
+  });
+
+  it("in den runden Ecken bleiben Puck und Figuren auf dem Eis", () => {
+    const w = eis();
+    const R = w.map.corner;
+    expect(R).toBeGreaterThan(0);
+    giveBall(w, 400, 420);
+    tryAttack(w, w.player!, -0.75 * Math.PI, 1);
+    let ecke = false, heraus = false;
+    for (let t = 0; t < 3 && !heraus; t += STEP) {
+      run(w, STEP);
+      const drin = w.ball.x < R && w.ball.y < R;
+      if (drin) { ecke = true; expect(Math.hypot(w.ball.x - R, w.ball.y - R)).toBeLessThanOrEqual(R - w.ball.r + 0.5); }
+      // Die Ecke wirft ihn zurück aufs Feld
+      else if (ecke) heraus = true;
+    }
+    expect(heraus).toBe(true);
+
+    const p = w.player!;
+    p.x = 30; p.y = 30;
+    run(w, STEP, { mx: -1, my: -1, aim: null, commands: [] });
+    expect(Math.hypot(p.x - R, p.y - R)).toBeLessThanOrEqual(R - p.r + 0.5);
+  });
+
+  it("die Zielhilfe zeigt den Weg mit Abpraller", () => {
+    const w = eis();
+    giveBall(w, 200, 200);
+    const pts = traceKick(w, 0, kickDist(w.mode));
+    const maxX = Math.max(...pts.map(q => q.x));
+    expect(maxX).toBeGreaterThan(W - 40);
+    expect(pts[pts.length - 1].x).toBeLessThan(maxX - 50);
   });
 
   it("und er bleibt länger in Bewegung", () => {

@@ -23,9 +23,16 @@ export const BALL_RADIUS = 16;
 export const BALL_FRICTION = 3;
 export const KICK_DIST = 300;
 export const SUPER_KICK_DIST = 500;
-/** Eishockey: der Puck bremst kaum und fliegt weiter als ein Ball auf Rasen */
-export const ICE_FRICTION = 1.2;
-export const ICE_KICK_FACTOR = 1.8;
+/** Wie viel Tempo beim Abprallen an Mauer oder Spielfeldrand erhalten bleibt */
+export const BALL_BOUNCE = 0.7;
+/** Eishockey: der Puck bremst kaum, ein normaler Schuss gleitet über das ganze Feld */
+export const ICE_FRICTION = 0.8;
+export const ICE_KICK_DIST = W;
+export const ICE_SUPER_KICK_DIST = 2800;
+/** Die Bande federt: der Puck prallt mit fast vollem Tempo zurück */
+export const ICE_BOUNCE = 0.9;
+/** Bots schießen höchstens aus dieser Entfernung aufs Ziel, auch wenn der Puck weiter käme */
+export const BOT_SHOT_MAX = 500;
 export const CARRY_SPEED = 0.75;
 export const PICKUP_COOLDOWN = 0.6;
 /** Ein gelungener Pass lädt den Super des Passgebers um diesen Anteil */
